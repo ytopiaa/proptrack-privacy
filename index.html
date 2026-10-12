@@ -3,57 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PropsTrack - Privacy Policy</title>
-  <meta property="og:title" content="PropsTrack - Privacy Policy">
+  <title>PropsTrack — Privacy Policy</title>
+  <meta name="description" content="How PropsTrack handles your data.">
+  <meta name="theme-color" content="#0A0A12">
+  <meta property="og:title" content="PropsTrack — Privacy Policy">
+  <meta property="og:description" content="How PropsTrack handles your data.">
   <meta property="og:image" content="https://proptrack-privacy.vercel.app/og-icon.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/og-icon.png">
+  <link rel="apple-touch-icon" href="/og-icon.png">
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.65;color:#222;max-width:780px;margin:0 auto;padding:40px 20px;background:#f7f7f9}
-    .card{background:#fff;padding:36px;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.05)}
-    h1{margin-top:0;font-size:28px}
-    h2{font-size:19px;margin-top:30px}
-    .muted{color:#777;font-size:14px}
-    a{color:#6d4aff}
+    :root{
+      --bg:#0A0A12; --card:#14142B; --line:rgba(255,255,255,.08); --surface:rgba(255,255,255,.04);
+      --text:#EDEDF0; --sub:#A6A6BF; --muted:rgba(255,255,255,.42);
+      --accent:#A78BFA; --accent2:#7C5CFF; --green:#6EE7B7; --pink:#F472B6; --amber:#FBBF24;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      margin:0; color:var(--text); background:var(--bg);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.65; min-height:100vh;
+      background-image:
+        radial-gradient(700px 420px at 15% -10%, rgba(124,92,255,.28), transparent 70%),
+        radial-gradient(600px 380px at 100% 10%, rgba(244,114,182,.12), transparent 70%);
+      background-repeat:no-repeat;
+    }
+    .wrap{max-width:760px; margin:0 auto; padding:48px 16px 64px}
+
+    header{display:flex; align-items:center; gap:16px; margin-bottom:28px}
+    header img{width:64px; height:64px; border-radius:16px; box-shadow:0 10px 30px rgba(124,92,255,.35)}
+    .brand{font-size:15px; font-weight:600; color:var(--sub); letter-spacing:.2px}
+    .brand b{color:var(--accent)}
+    h1{margin:2px 0 0; font-size:32px; line-height:1.15; letter-spacing:-.5px;
+       background:linear-gradient(90deg,#fff 0%,#D9CCFF 55%,var(--accent) 100%);
+       -webkit-background-clip:text; background-clip:text; color:transparent}
+    .pill{display:inline-flex; align-items:center; gap:8px; margin:0 0 26px; padding:6px 12px; border-radius:999px;
+          background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.25); color:var(--accent); font-size:13px; font-weight:600}
+    .pill i{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green)}
+    .intro{color:var(--sub); font-size:17px; margin:0 0 28px}
+
+    section{
+      position:relative; background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      border:1px solid var(--line); border-radius:18px; padding:22px 22px 20px 70px; margin:0 0 14px;
+    }
+    section .n{
+      position:absolute; left:20px; top:22px; width:34px; height:34px; border-radius:11px;
+      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;
+      color:var(--accent); background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.22);
+    }
+    section h2{margin:4px 0 6px; font-size:18px; letter-spacing:-.2px}
+    section p{margin:0; color:var(--sub); font-size:15.5px}
+    section.ai{border-color:rgba(167,139,250,.35); background:linear-gradient(135deg, rgba(124,92,255,.16), rgba(20,20,43,.6))}
+    section.ai .n{color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none}
+    .tag{display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700;
+         letter-spacing:.4px; text-transform:uppercase; vertical-align:2px; color:var(--bg); background:var(--accent)}
+    section.del .n{color:var(--pink); background:rgba(244,114,182,.10); border-color:rgba(244,114,182,.25)}
+    section.sec .n{color:var(--green); background:rgba(110,231,183,.10); border-color:rgba(110,231,183,.25)}
+    a{color:var(--accent); text-decoration:none; font-weight:600}
+    a:hover{text-decoration:underline}
+    kbd{font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:0 6px}
+
+    .contact{
+      margin-top:26px; padding:24px; border-radius:18px; text-align:center;
+      background:linear-gradient(135deg, rgba(124,92,255,.22), rgba(244,114,182,.10)); border:1px solid rgba(167,139,250,.3)
+    }
+    .contact h2{margin:0 0 4px; font-size:18px}
+    .contact p{margin:0 0 14px; color:var(--sub)}
+    .btn{display:inline-block; padding:12px 20px; border-radius:14px; color:#fff; font-weight:700;
+         background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 8px 24px rgba(124,92,255,.35)}
+    .btn:hover{text-decoration:none; opacity:.92}
+    footer{margin-top:28px; text-align:center; color:var(--muted); font-size:13px}
+    footer a{color:var(--sub); font-weight:500}
+
+    @media (max-width:520px){
+      .wrap{padding-top:32px}
+      h1{font-size:26px}
+      header img{width:54px; height:54px}
+      section{padding:18px 16px 16px 60px}
+      section .n{left:14px; top:18px; width:32px; height:32px}
+    }
   </style>
 </head>
 <body>
-<div class="card">
-  <h1>PropsTrack Privacy Policy</h1>
-  <p class="muted">Last updated: October 12, 2026</p>
+<div class="wrap">
+  <header>
+    <img src="og-icon.png" alt="PropsTrack logo">
+    <div>
+      <div class="brand">Props<b>Track</b></div>
+      <h1>Privacy Policy</h1>
+    </div>
+  </header>
 
-  <p>PropsTrack helps film and TV crews track props, warehouses and returns. This policy explains what information the app handles and how.</p>
+  <div class="pill"><i></i>Last updated: October 12, 2026</div>
+  <p class="intro">PropsTrack helps film and TV crews track props, warehouses and returns. This policy explains what information the app handles and how.</p>
 
-  <h2>1. What We Collect</h2>
-  <p>When you create an account we store your email address and full name. While you use the app we store the content you create: photos of props, project names, warehouse details and contacts, pull-list items, notes, actors and sets, and the status of each prop. If you add a profile photo, we store it too. To send notifications we store a push token for your device.</p>
+  <section>
+    <div class="n">1</div>
+    <h2>What We Collect</h2>
+    <p>When you create an account we store your email address and full name. While you use the app we store the content you create: photos of props, project names, warehouse details and contacts, pull-list items, notes, actors and sets, and the status of each prop. If you add a profile photo, we store it too. To send notifications we store a push token for your device.</p>
+  </section>
 
-  <h2>2. How We Use Your Data</h2>
-  <p>We use your data only to provide the PropsTrack service to you and your team. We do not sell or rent your data and we do not use it for advertising.</p>
+  <section>
+    <div class="n">2</div>
+    <h2>How We Use Your Data</h2>
+    <p>We use your data only to provide the PropsTrack service to you and your team. We do not sell or rent your data and we do not use it for advertising.</p>
+  </section>
 
-  <h2>3. AI Prop Naming</h2>
-  <p>To save time, PropsTrack can suggest a short name for a prop from its photo (for example "Black laptop"). When this feature is used, the photo is sent securely to our AI provider, Anthropic, which returns the suggested name. Photos are used only to generate the name. Under Anthropic's commercial terms, data sent through its API is not used to train its models. The name is saved to your prop and you can change it at any time.</p>
+  <section class="ai">
+    <div class="n">3</div>
+    <h2>AI Prop Naming <span class="tag">Optional</span></h2>
+    <p>To save time, PropsTrack can suggest a short name for a prop from its photo (for example "Black laptop"). The app asks for your permission first, and you can turn it off any time in <kbd>Profile → AI prop names</kbd>. When it is on, the photo is sent securely to our AI provider, Anthropic, which returns the suggested name. Photos are used only to generate the name. Under Anthropic's commercial terms, data sent through its API is not used to train its models. The name is saved to your prop and you can change it at any time.</p>
+  </section>
 
-  <h2>4. Data Storage and Security</h2>
-  <p>Your data is stored with our hosting provider Supabase, protected by access rules so that project data is available only to members of that project. All traffic between the app and our servers is encrypted (HTTPS).</p>
+  <section class="sec">
+    <div class="n">4</div>
+    <h2>Data Storage and Security</h2>
+    <p>Your data is stored with our hosting provider Supabase, protected by access rules so that project data is available only to members of that project. All traffic between the app and our servers is encrypted (HTTPS).</p>
+  </section>
 
-  <h2>5. Camera and Photo Library</h2>
-  <p>The app asks for camera and photo library access so you can photograph props. Photos are visible only to members of the same project.</p>
+  <section>
+    <div class="n">5</div>
+    <h2>Camera and Photo Library</h2>
+    <p>The app asks for camera and photo library access so you can photograph props. Photos are visible only to members of the same project.</p>
+  </section>
 
-  <h2>6. Project Collaboration</h2>
-  <p>When you join a project with an invite code, other members of that project can see your name and the props you log. Project admins can manage members and roles.</p>
+  <section>
+    <div class="n">6</div>
+    <h2>Project Collaboration</h2>
+    <p>When you join a project with an invite code, other members of that project can see your name and the props you log. Project admins can manage members and roles.</p>
+  </section>
 
-  <h2>7. Service Providers</h2>
-  <p>We use a small number of providers to run the app: Supabase (database, file storage and sign-in), Anthropic (AI prop naming) and Expo (push notifications). They process data only on our behalf to provide these functions.</p>
+  <section>
+    <div class="n">7</div>
+    <h2>Service Providers</h2>
+    <p>We use a small number of providers to run the app: Supabase (database, file storage and sign-in), Anthropic (AI prop naming) and Expo (push notifications). They process data only on our behalf to provide these functions.</p>
+  </section>
 
-  <h2>8. Data Retention and Deletion</h2>
-  <p>Project admins can delete props, warehouses and whole projects in the app; this also deletes the related photos. You can delete your account at any time in the app under Profile &rarr; Delete my account. You can also email us to request deletion, and we will remove your data within 30 days.</p>
+  <section class="del">
+    <div class="n">8</div>
+    <h2>Data Retention and Deletion</h2>
+    <p>Project admins can delete props, warehouses and whole projects in the app; this also deletes the related photos. You can delete your account at any time in the app under <kbd>Profile → Delete my account</kbd>. You can also email us to request deletion, and we will remove your data within 30 days.</p>
+  </section>
 
-  <h2>9. Children's Privacy</h2>
-  <p>PropsTrack is a professional tool and is not intended for children under 13. We do not knowingly collect data from children.</p>
+  <section>
+    <div class="n">9</div>
+    <h2>Children's Privacy</h2>
+    <p>PropsTrack is a professional tool and is not intended for children under 13. We do not knowingly collect data from children.</p>
+  </section>
 
-  <h2>10. Changes to This Policy</h2>
-  <p>If we make significant changes, we will update this page and let you know in the app.</p>
+  <section>
+    <div class="n">10</div>
+    <h2>Changes to This Policy</h2>
+    <p>If we make significant changes, we will update this page and let you know in the app.</p>
+  </section>
 
-  <h2>11. Contact Us</h2>
-  <p>Questions or requests: <a href="mailto:propstrack@icloud.com">propstrack@icloud.com</a></p>
+  <div class="contact">
+    <h2>Questions or requests?</h2>
+    <p>We're happy to help with anything about your data.</p>
+    <a class="btn" href="mailto:propstrack@icloud.com">propstrack@icloud.com</a>
+  </div>
+
+  <footer>© 2026 PropsTrack · <a href="/app.html">Get the app</a></footer>
 </div>
 </body>
 </html>
