@@ -122,7 +122,24 @@
     .spinner{width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} .grid{grid-template-columns:1fr} }
+    /* live */
+    .livegrid{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px}
+    .livepill{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(110,231,183,.12);color:var(--green);font-size:12px;font-weight:800;letter-spacing:1px}
+    .livepill i{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+    .livepill.off{background:rgba(255,255,255,.06);color:var(--muted)}.livepill.off i{background:var(--muted);animation:none}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(110,231,183,.6)}70%{box-shadow:0 0 0 8px rgba(110,231,183,0)}100%{box-shadow:0 0 0 0 rgba(110,231,183,0)}}
+    .bignum{font-size:46px;font-weight:800;letter-spacing:-1px;line-height:1;margin:14px 0 4px}
+    .names{color:var(--sub);font-size:13px;min-height:18px}
+    .today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+    .today div{background:rgba(255,255,255,.04);border-radius:12px;padding:10px}.today b{display:block;font-size:20px}.today span{font-size:11.5px;color:var(--muted)}
+    .feed{display:flex;flex-direction:column;gap:6px;max-height:330px;overflow-y:auto;padding-right:4px}
+    .fi{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.025);transition:background 1.5s}
+    .fi.new{background:rgba(167,139,250,.22)}
+    .fi img,.fi .ph{width:40px;height:40px;border-radius:9px;object-fit:cover;flex:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center}
+    .fi .tx{flex:1;min-width:0;font-size:14px}.fi .tx div:last-child{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fi .tm{font-size:12px;color:var(--muted);white-space:nowrap}
+    .kdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+    @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} .grid{grid-template-columns:1fr} .livegrid{grid-template-columns:1fr} }
     @media (max-width:520px){ .tiles{grid-template-columns:repeat(2,1fr)} .tile .v{font-size:24px} .chart{height:150px} .card{padding:14px} header .seg{order:3; width:100%} header .seg button{flex:1} }
   </style>
 </head>
@@ -152,6 +169,21 @@
     <button class="btn ghost" id="refresh" title="Refresh">↻</button>
     <button class="btn ghost" id="logout">Sign out</button>
   </header>
+
+  <div class="livegrid">
+    <div class="card">
+      <span class="livepill" id="livePill"><i></i>LIVE</span>
+      <div class="bignum" id="activeNow">–</div>
+      <div class="hint" style="margin:0">active in the last 15 min</div>
+      <div class="names" id="activeNames"></div>
+      <div class="today" id="todayBox"></div>
+    </div>
+    <div class="card">
+      <h2>Right now</h2>
+      <div class="hint">Latest pulls, returns and sign-ups across all projects · updates every 10 s</div>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
 
   <div class="tiles" id="tiles"></div>
 
@@ -196,7 +228,7 @@
 
   <div class="card">
     <h2>Projects</h2>
-    <div class="hint">Most recently active first</div>
+    <div class="hint">Most recently active first · tap a project for warehouses and members</div>
     <div class="tbl"><table id="projTbl"></table></div>
   </div>
 </div>
@@ -269,7 +301,7 @@ function hbars(rows, labelFn, valFn, subFn){
 
 function render(){
   const t = data.totals;
-  $('updated').textContent = 'Updated ' + new Date(data.generated_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' · last ' + days + ' days';
+  $('updated').textContent = 'Updated ' + new Date(data.generated_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · last ' + days + ' days';
   const tiles = [
     ['Active today', t.active_24h, 'last 24 hours', true],
     ['Active this week', t.active_7d, 'last 7 days'],
@@ -296,7 +328,7 @@ function render(){
   const f = data.features || [];
   $('features').innerHTML = f.length
     ? hbars(f.slice(0, 12), r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => `${fmt(r.count)} · ${r.users} ${r.users === 1 ? 'person' : 'people'}`)
-    : '<div class="empty">Feature tracking starts with app version 1.0.26. Until then you see sign-ins and photos.</div>';
+    : '<div class="empty">Feature tracking starts with the next app version. Until then you see sign-ins and photos.</div>';
 
   barChart($('hourChart'), data.hours || [], 'photos', r => `<b>${String(r.hour).padStart(2,'0')}:00–${String(r.hour).padStart(2,'0')}:59</b>${fmt(r.photos)} photos`, {noGrid:true});
 
@@ -332,8 +364,74 @@ function renderUsers(){
 function renderProjects(){
   const rows = data.projects || [];
   $('projTbl').innerHTML = '<thead><tr><th>Project</th><th class="num">Members</th><th class="num">Props</th><th class="num">Out now</th><th>Last activity</th></tr></thead><tbody>'
-    + rows.map(p => `<tr style="cursor:default"><td>${esc(p.name)}</td><td class="num">${p.members}</td><td class="num">${fmt(p.props)}</td><td class="num">${fmt(p.out_now)}</td><td class="muted">${ago(p.last_activity)}</td></tr>`).join('') + '</tbody>';
+    + rows.map(p => `<tr data-pid="${esc(p.id)}"><td>${esc(p.name)}</td><td class="num">${p.members}</td><td class="num">${fmt(p.props)}</td><td class="num">${fmt(p.out_now)}</td><td class="muted">${ago(p.last_activity)}</td></tr>`).join('') + '</tbody>';
+  $('projTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openProject(tr.dataset.pid));
 }
+
+async function openProject(pid){
+  const p = (data.projects || []).find(x => String(x.id) === String(pid)); if (!p) return;
+  const dr = $('drawer'); $('scrim').classList.remove('hidden'); dr.classList.remove('hidden');
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(p.name)}</h3><div class="meta">Loading…</div><div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>`;
+  $('dClose').onclick = closeUser;
+  const { data: d, error } = await sb.rpc('admin_project', { p_project: pid });
+  if (error) { dr.insertAdjacentHTML('beforeend', `<div class="err">${esc(error.message)}</div>`); return; }
+  const whs = d.warehouses || [], mem = d.members || [];
+  const usedWh = whs.filter(w => w.props > 0).length;
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(d.name || p.name)}</h3>
+    <div class="meta">Created ${d.created_at ? new Date(d.created_at).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '—'} · last activity ${ago(p.last_activity)}</div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+      <div class="tile"><div class="k">People</div><div class="v">${mem.length}</div><div class="s">${mem.filter(m => m.photos > 0).length} have added props</div></div>
+      <div class="tile"><div class="k">Warehouses</div><div class="v">${whs.length}</div><div class="s">${usedWh} in use</div></div>
+      <div class="tile"><div class="k">Props</div><div class="v">${fmt(p.props)}</div><div class="s">${fmt(p.out_now)} out now</div></div>
+    </div>
+    <div class="list" style="margin-bottom:6px"><div><span>Missing</span><span>${d.missing || 0}</span></div><div><span>Actors · Sets</span><span>${d.actors || 0} · ${d.sets || 0}</span></div></div>
+    <h4>Warehouses</h4>
+    ${whs.length ? hbars(whs, w => w.name + (w.pulled ? ` · ${w.pulled} out` : ''), w => w.props, w => `${fmt(w.props)} props · ${w.last_activity ? ago(w.last_activity) : 'never used'}`) : '<div class="empty">No warehouses yet.</div>'}
+    <h4>People in this project</h4>
+    <div class="list">${mem.map(m => `<div><span>${esc(m.name)} <span class="muted">· ${esc(m.role || 'member')}</span></span><span>${fmt(m.photos)} props · ${m.last_activity ? ago(m.last_activity) : 'no activity'}</span></div>`).join('') || '<span class="muted">Nobody yet</span>'}</div>`;
+  $('dClose').onclick = closeUser;
+}
+
+// ── Live feed ─────────────────────────────────────────────
+const KIND = {
+  pulled:   { label: 'Pulled',   color: 'var(--accent)' },
+  returned: { label: 'Returned', color: 'var(--green)' },
+  missing:  { label: 'Marked missing', color: 'var(--pink)' },
+  signup:   { label: 'Signed up', color: '#FBBF24' },
+};
+let seenKeys = null, liveTimer = null, statsTimer = null, liveOk = false;
+async function loadLive(){
+  const { data: d, error } = await sb.rpc('admin_live', { p_limit: 40 });
+  const pill = $('livePill');
+  if (error) { liveOk = false; pill.classList.add('off'); pill.lastChild.textContent = 'OFFLINE'; return; }
+  liveOk = true; pill.classList.remove('off'); pill.lastChild.textContent = 'LIVE';
+  $('activeNow').textContent = fmt(d.active_15m);
+  const names = (d.active_names || []).filter(Boolean);
+  $('activeNames').textContent = names.length ? names.slice(0, 6).join(', ') + (names.length > 6 ? ` +${names.length - 6}` : '') : 'Nobody right now';
+  const t = d.today || {};
+  $('todayBox').innerHTML = `<div><b>${fmt(t.photos)}</b><span>photos today</span></div><div><b>${fmt(t.returned)}</b><span>returned today</span></div><div><b>${fmt(t.signups)}</b><span>new users</span></div>`;
+  const feed = d.feed || [];
+  const keyOf = f => f.at + '|' + f.kind + '|' + (f.item || '') + '|' + f.who;
+  const first = seenKeys === null; const prev = seenKeys || new Set();
+  seenKeys = new Set(feed.map(keyOf));
+  $('feed').innerHTML = feed.length ? feed.map(f => {
+    const k = KIND[f.kind] || { label: f.kind.startsWith('event:') ? FEATURE_LABEL[f.kind.slice(6)] || f.kind.slice(6) : f.kind, color: 'var(--sub)' };
+    const where = [f.project, f.warehouse].filter(Boolean).join(' · ');
+    const pic = f.photo_url ? `<img src="${esc(f.photo_url)}" alt="" loading="lazy">` : `<div class="ph" style="color:#FBBF24;font-weight:800">${f.kind === 'signup' ? '+' : '•'}</div>`;
+    return `<div class="fi${!first && !prev.has(keyOf(f)) ? ' new' : ''}">${pic}
+      <div class="tx"><div><span class="kdot" style="background:${k.color}"></span><b>${esc(f.who)}</b> ${k.label.toLowerCase()} ${f.item ? '<b>' + esc(f.item) + '</b>' : ''}</div><div>${esc(where)}</div></div>
+      <div class="tm">${ago(f.at)}</div></div>`;
+  }).join('') : '<div class="empty">Nothing in the last 7 days.</div>';
+  setTimeout(() => document.querySelectorAll('.fi.new').forEach(e => e.classList.remove('new')), 2500);
+}
+function startLive(){
+  stopLive();
+  loadLive();
+  liveTimer = setInterval(() => { if (!document.hidden) loadLive(); }, 10000);
+  statsTimer = setInterval(() => { if (!document.hidden) load(true); }, 60000);
+}
+function stopLive(){ clearInterval(liveTimer); clearInterval(statsTimer); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('app').classList.contains('hidden')) { loadLive(); } });
 
 async function openUser(id){
   const u = (data.users || []).find(x => x.id === id); if (!u) return;
@@ -353,7 +451,7 @@ async function openUser(id){
       <div class="tile"><div class="k">All photos</div><div class="v">${fmt(u.photos)}</div><div class="s">all time</div></div>
       <div class="tile"><div class="k">Projects</div><div class="v">${u.projects}</div><div class="s">member of</div></div></div>
     <h4>Photos per day</h4><div class="chart mini" id="uChart"></div>
-    <h4>Features used</h4>${(d.features || []).length ? hbars(d.features, r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => fmt(r.count)) : '<div class="empty">No feature data yet (starts with 1.0.26).</div>'}
+    <h4>Features used</h4>${(d.features || []).length ? hbars(d.features, r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => fmt(r.count)) : '<div class="empty">No feature data yet (starts with the next app version).</div>'}
     <h4>Projects</h4><div class="list">${(d.projects || []).map(p => `<div><span>${esc(p.name)} <span class="muted">· ${esc(p.role || 'member')}</span></span><span>${fmt(p.photos)} photos</span></div>`).join('') || '<span class="muted">None</span>'}</div>
     ${(d.recent || []).length ? `<h4>Recent activity</h4><div class="list">${d.recent.slice(0, 25).map(e => `<div><span>${esc(FEATURE_LABEL[e.event] || e.event)}${e.screen ? ` <span class="muted">· ${esc(e.screen)}</span>` : ''}</span><span>${ago(e.created_at)}</span></div>`).join('')}</div>` : ''}`;
   $('dClose').onclick = closeUser;
@@ -363,8 +461,8 @@ function closeUser(){ $('drawer').classList.add('hidden'); $('scrim').classList.
 $('scrim').onclick = closeUser;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUser(); });
 
-async function load(){
-  $('refresh').disabled = true; $('updated').textContent = 'Loading…';
+async function load(quiet){
+  if (!quiet) { $('refresh').disabled = true; $('updated').textContent = 'Loading…'; }
   const { data: d, error } = await sb.rpc('admin_stats', { p_days: days });
   $('refresh').disabled = false;
   if (error) {
@@ -376,7 +474,7 @@ async function load(){
 }
 
 function showLogin(msg){ $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('loginErr').textContent = msg || ''; }
-function showApp(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); load(); }
+function showApp(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); load(); startLive(); }
 
 $('loginForm').onsubmit = async e => {
   e.preventDefault(); $('loginErr').textContent = ''; $('loginBtn').disabled = true;
@@ -385,8 +483,8 @@ $('loginForm').onsubmit = async e => {
   if (error) { $('loginErr').textContent = error.message; return; }
   $('password').value = ''; showApp();
 };
-$('logout').onclick = async () => { await sb.auth.signOut(); showLogin(); };
-$('refresh').onclick = load;
+$('logout').onclick = async () => { stopLive(); await sb.auth.signOut(); showLogin(); };
+$('refresh').onclick = () => { load(); loadLive(); };
 $('userSearch').oninput = renderUsers;
 $('period').querySelectorAll('button').forEach(b => {
   b.classList.toggle('on', +b.dataset.d === days);
