@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0A0A12">
+  <title>PropsTrack Stats</title>
+  <link rel="icon" href="og-icon.png">
+  <link rel="apple-touch-icon" href="og-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    :root{
+      --bg:#0A0A12; --card:#14142B; --card2:#101021; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.05);
+      --text:#EDEDF0; --sub:#A6A6BF; --muted:rgba(255,255,255,.42);
+      --accent:#A78BFA; --accent2:#7C5CFF; --pink:#F472B6; --green:#6EE7B7;
+      --s-ios:#8B6CF6; --s-android:#22A078; --s-other:#5B5B78; --bar:#8B6CF6; --bar-hi:#A78BFA;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.5;
+      background-image:radial-gradient(700px 420px at 10% -10%, rgba(124,92,255,.22), transparent 70%), radial-gradient(600px 360px at 100% 0%, rgba(244,114,182,.10), transparent 70%);
+      background-repeat:no-repeat}
+    button,input{font:inherit}
+    .wrap{max-width:1120px; margin:0 auto; padding:24px 16px 64px}
+    .hidden{display:none !important}
+
+    /* login */
+    .login{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px}
+    .login .box{width:100%; max-width:380px; background:var(--card); border:1px solid var(--line); border-radius:22px; padding:28px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    .login img{width:64px; height:64px; border-radius:16px; box-shadow:0 10px 30px rgba(124,92,255,.35)}
+    .login h1{margin:14px 0 4px; font-size:22px}
+    .login p{margin:0 0 20px; color:var(--sub); font-size:14px}
+    .field{width:100%; margin:0 0 10px; padding:13px 14px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--text); outline:none}
+    .field:focus{border-color:rgba(167,139,250,.6); box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:12px; border:0; cursor:pointer; color:#fff; font-weight:700;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 8px 24px rgba(124,92,255,.3)}
+    .btn.full{width:100%; margin-top:6px}
+    .btn:disabled{opacity:.6; cursor:default}
+    .ghost{background:rgba(255,255,255,.05); border:1px solid var(--line); box-shadow:none; color:var(--text); font-weight:600; padding:8px 12px; border-radius:10px}
+    .err{color:var(--pink); font-size:13px; min-height:18px; margin-top:10px}
+
+    /* header */
+    header{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:20px}
+    header img{width:44px; height:44px; border-radius:12px}
+    header .t{flex:1; min-width:160px}
+    header .t b{display:block; font-size:20px; letter-spacing:-.3px}
+    header .t span{color:var(--muted); font-size:13px}
+    .seg{display:inline-flex; background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px; padding:3px}
+    .seg button{border:0; background:none; color:var(--sub); padding:6px 12px; border-radius:9px; cursor:pointer; font-weight:600; font-size:14px}
+    .seg button.on{background:rgba(167,139,250,.18); color:var(--text)}
+
+    /* tiles */
+    .tiles{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:16px}
+    .tile{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:16px; padding:14px 16px}
+    .tile .k{color:var(--sub); font-size:12.5px; font-weight:600}
+    .tile .v{font-size:28px; font-weight:750; letter-spacing:-.5px; margin-top:2px; font-variant-numeric:tabular-nums}
+    .tile .s{color:var(--muted); font-size:12px}
+    .tile.hero{background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(20,20,43,.6)); border-color:rgba(167,139,250,.3)}
+
+    .grid{display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px}
+    .card{background:var(--card2); border:1px solid var(--line); border-radius:18px; padding:18px; min-width:0}
+    .card h2{margin:0 0 2px; font-size:16px; letter-spacing:-.2px}
+    .card .hint{color:var(--muted); font-size:12.5px; margin-bottom:12px}
+
+    /* bar chart */
+    .chart{position:relative; height:180px; display:flex; align-items:flex-end; gap:2px; padding-top:8px; border-bottom:1px solid var(--line)}
+    .chart .col{flex:1; height:100%; display:flex; align-items:flex-end; cursor:default; position:relative}
+    .chart .col .b{width:100%; background:var(--bar); border-radius:4px 4px 0 0; min-height:0}
+    .chart .col:hover .b{background:var(--bar-hi)}
+    .chart .col.zero .b{background:transparent}
+    .axis{display:flex; justify-content:space-between; color:var(--muted); font-size:11.5px; margin-top:6px}
+    .gridline{position:absolute; left:0; right:0; border-top:1px dashed var(--line2); pointer-events:none}
+    .gridline span{position:absolute; right:0; top:-16px; color:var(--muted); font-size:11px}
+    .tip{position:fixed; z-index:50; pointer-events:none; background:#1C1C38; border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:12.5px; box-shadow:0 10px 30px rgba(0,0,0,.45); white-space:nowrap}
+    .tip b{display:block; font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px}
+
+    /* platform bar */
+    .stack{display:flex; height:14px; border-radius:7px; overflow:hidden; gap:2px; margin:6px 0 14px}
+    .stack div{height:100%}
+    .legend{display:flex; flex-direction:column; gap:10px}
+    .legend .row{display:flex; align-items:center; gap:10px}
+    .dot{width:10px; height:10px; border-radius:3px; flex:none}
+    .legend .n{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700}
+    .legend .sub{color:var(--muted); font-size:12px}
+
+    /* horizontal bars */
+    .hbars{display:flex; flex-direction:column; gap:10px}
+    .hb .top{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:4px}
+    .hb .top span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
+    .hb .track{height:8px; border-radius:4px; background:rgba(255,255,255,.05)}
+    .hb .fill{height:100%; border-radius:4px; background:var(--bar)}
+    .empty{color:var(--sub); font-size:14px; background:rgba(167,139,250,.07); border:1px dashed rgba(167,139,250,.3); border-radius:12px; padding:14px}
+
+    /* tables */
+    .tools{display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap}
+    .tools .field{margin:0; max-width:260px; padding:9px 12px}
+    .tbl{overflow-x:auto; -webkit-overflow-scrolling:touch}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th{text-align:left; color:var(--muted); font-weight:600; font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; user-select:none}
+    th.num,td.num{text-align:right; font-variant-numeric:tabular-nums}
+    td{padding:10px; border-bottom:1px solid var(--line2); white-space:nowrap}
+    tbody tr{cursor:pointer}
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+    .pf{display:inline-flex; align-items:center; gap:6px; color:var(--sub); font-size:13px}
+    .live{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); margin-right:6px; vertical-align:1px}
+    .muted{color:var(--muted)}
+
+    /* drawer */
+    .scrim{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:40}
+    .drawer{position:fixed; top:0; right:0; bottom:0; width:min(440px,100%); z-index:41; background:var(--card); border-left:1px solid var(--line); padding:20px; overflow-y:auto}
+    .drawer h3{margin:0; font-size:20px}
+    .drawer .meta{color:var(--sub); font-size:13px; margin:2px 0 16px}
+    .drawer h4{margin:18px 0 8px; font-size:13px; color:var(--sub); text-transform:uppercase; letter-spacing:.5px}
+    .drawer .close{position:absolute; top:16px; right:16px}
+    .list{display:flex; flex-direction:column; gap:6px; font-size:14px}
+    .list div{display:flex; justify-content:space-between; gap:10px; padding:8px 10px; background:rgba(255,255,255,.03); border-radius:10px}
+    .list div span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
+    .mini{height:70px}
+
+    .spinner{width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} .grid{grid-template-columns:1fr} }
+    @media (max-width:520px){ .tiles{grid-template-columns:repeat(2,1fr)} .tile .v{font-size:24px} .chart{height:150px} .card{padding:14px} header .seg{order:3; width:100%} header .seg button{flex:1} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login hidden">
+  <form class="box" id="loginForm" autocomplete="on">
+    <img src="og-icon.png" alt="">
+    <h1>PropsTrack Stats</h1>
+    <p>Sign in with your PropsTrack account</p>
+    <input class="field" id="email" type="email" placeholder="Email" autocomplete="username" required>
+    <input class="field" id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button class="btn full" id="loginBtn" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="wrap hidden">
+  <header>
+    <img src="og-icon.png" alt="">
+    <div class="t"><b>PropsTrack Stats</b><span id="updated">Loading…</span></div>
+    <div class="seg" id="period">
+      <button data-d="7">7 days</button><button data-d="30" class="on">30 days</button><button data-d="90">90 days</button>
+    </div>
+    <button class="btn ghost" id="refresh" title="Refresh">↻</button>
+    <button class="btn ghost" id="logout">Sign out</button>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Photos per day</h2>
+      <div class="hint">Props photographed each day · hover a bar for details</div>
+      <div class="chart" id="dailyChart"></div>
+      <div class="axis" id="dailyAxis"></div>
+    </div>
+    <div class="card">
+      <h2>Platforms</h2>
+      <div class="hint">By each user's latest sign-in</div>
+      <div class="stack" id="pfStack"></div>
+      <div class="legend" id="pfLegend"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Features used</h2>
+      <div class="hint">What people tap in the app</div>
+      <div id="features"></div>
+    </div>
+    <div class="card">
+      <h2>When people work</h2>
+      <div class="hint">Photos by hour of day (Sofia time)</div>
+      <div class="chart mini" id="hourChart" style="height:120px"></div>
+      <div class="axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Users</h2>
+    <div class="hint">Tap a person to see what they do</div>
+    <div class="tools">
+      <input class="field" id="userSearch" placeholder="Search name…">
+      <span class="muted" id="userCount"></span>
+    </div>
+    <div class="tbl"><table id="usersTbl"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Projects</h2>
+    <div class="hint">Most recently active first</div>
+    <div class="tbl"><table id="projTbl"></table></div>
+  </div>
+</div>
+
+<div id="scrim" class="scrim hidden"></div>
+<aside id="drawer" class="drawer hidden" aria-label="User details"></aside>
+<div id="tip" class="tip hidden"></div>
+
+<script>
+const SUPABASE_URL = 'https://hxtawtebartukulvavvj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6RWpVGy6w4aAhGs4TQMjGw_36NCPFDm'; // public (publishable) key — the data itself is protected in the database
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n || 0).toLocaleString('en-US');
+const PF_COLOR = { iOS:'var(--s-ios)', Android:'var(--s-android)' };
+const FEATURE_LABEL = {
+  app_open:'Opened the app', photo_capture:'Took photo (camera)', photo_gallery:'Added from gallery', prop_return:'Return',
+  prop_pull_again:'Pull again', prop_found:'Marked found', search:'Search', pull_note_add:'Pull list item', pull_note_done:'Pull list done',
+  warehouse_open:'Opened warehouse', warehouse_add:'Added warehouse', project_create:'Created project', project_join:'Joined project',
+  invite_share:'Shared invite', all_props_open:'Opened All Props', actor_add:'Added actor', decor_add:'Added set', prop_edit:'Edited prop',
+  share_app:'Shared app', rate_app:'Rate app', ai_toggle:'Changed AI setting'
+};
+let days = 30, data = null, sortKey = 'last_seen', sortDir = -1;
+try { const d = +localStorage.getItem('pt_stats_days'); if ([7,30,90].includes(d)) days = d; } catch(e) {}
+
+function ago(ts){
+  if (!ts) return '—';
+  const s = (Date.now() - new Date(ts)) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + ' min ago';
+  if (s < 86400) return Math.floor(s/3600) + ' h ago';
+  if (s < 86400*30) return Math.floor(s/86400) + ' d ago';
+  return new Date(ts).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+const dayLabel = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+
+// tooltip
+const tip = $('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.classList.remove('hidden');
+  const r = tip.getBoundingClientRect(); let x = e.clientX + 12, y = e.clientY - r.height - 10;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 12; if (y < 8) y = e.clientY + 16;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+const hideTip = () => tip.classList.add('hidden');
+
+function barChart(el, rows, valueKey, tipFn, opts = {}){
+  const max = Math.max(1, ...rows.map(r => r[valueKey] || 0));
+  const step = max <= 5 ? 1 : max <= 20 ? 5 : max <= 50 ? 10 : Math.pow(10, Math.floor(Math.log10(max)));
+  const top = Math.ceil(max / step) * step;
+  let html = '';
+  if (!opts.noGrid) for (let g = step; g <= top; g += step) {
+    if (top / step > 4 && (g / step) % 2) continue;
+    html += `<div class="gridline" style="bottom:${g/top*100}%"><span>${g}</span></div>`;
+  }
+  html += rows.map((r, i) => { const v = r[valueKey] || 0;
+    return `<div class="col${v ? '' : ' zero'}" data-i="${i}"><div class="b" style="height:${v/top*100}%"></div></div>`; }).join('');
+  el.innerHTML = html;
+  el.querySelectorAll('.col').forEach(c => {
+    c.addEventListener('mousemove', e => showTip(e, tipFn(rows[+c.dataset.i])));
+    c.addEventListener('mouseleave', hideTip);
+    c.addEventListener('touchstart', e => { showTip(e.touches[0], tipFn(rows[+c.dataset.i])); setTimeout(hideTip, 1800); }, {passive:true});
+  });
+}
+
+function hbars(rows, labelFn, valFn, subFn){
+  const max = Math.max(1, ...rows.map(valFn));
+  return '<div class="hbars">' + rows.map(r => `<div class="hb"><div class="top"><span>${esc(labelFn(r))}</span><span>${subFn(r)}</span></div>
+    <div class="track"><div class="fill" style="width:${valFn(r)/max*100}%"></div></div></div>`).join('') + '</div>';
+}
+
+function render(){
+  const t = data.totals;
+  $('updated').textContent = 'Updated ' + new Date(data.generated_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' · last ' + days + ' days';
+  const tiles = [
+    ['Active today', t.active_24h, 'last 24 hours', true],
+    ['Active this week', t.active_7d, 'last 7 days'],
+    ['Active this month', t.active_30d, 'last 30 days'],
+    ['Users', t.users, `+${t.new_users_7d} new this week`],
+    ['Photos this week', t.photos_7d, `${fmt(t.props)} all time`],
+    ['AI named', t.ai_named_7d, 'this week'],
+  ];
+  $('tiles').innerHTML = tiles.map(([k, v, s, hero]) => `<div class="tile${hero ? ' hero' : ''}"><div class="k">${k}</div><div class="v">${fmt(v)}</div><div class="s">${s}</div></div>`).join('');
+
+  const daily = data.daily || [];
+  barChart($('dailyChart'), daily, 'photos', r => `<b>${dayLabel(r.day)}</b>${fmt(r.photos)} photos · ${r.photo_users} ${r.photo_users === 1 ? 'person' : 'people'}${r.signups ? ` · ${r.signups} new` : ''}`);
+  const n = daily.length;
+  $('dailyAxis').innerHTML = n ? [0, Math.floor(n/2), n-1].map(i => `<span>${dayLabel(daily[i].day)}</span>`).join('') : '';
+
+  const pf = (data.platforms || []).filter(p => p.platform !== 'Other');
+  const other = (data.platforms || []).find(p => p.platform === 'Other');
+  const tot = pf.reduce((a, p) => a + p.users, 0) || 1;
+  $('pfStack').innerHTML = pf.map(p => `<div style="width:${p.users/tot*100}%;background:${PF_COLOR[p.platform] || 'var(--s-other)'}" title="${p.platform}"></div>`).join('');
+  $('pfLegend').innerHTML = pf.map(p => `<div class="row"><span class="dot" style="background:${PF_COLOR[p.platform] || 'var(--s-other)'}"></span>
+      <div><div>${p.platform}</div><div class="sub">${p.active_30d} active this month</div></div><span class="n">${Math.round(p.users/tot*100)}% · ${p.users}</span></div>`).join('')
+    + (other ? `<div class="sub muted" style="font-size:12px">+${other.users} signed in from web/other</div>` : '');
+
+  const f = data.features || [];
+  $('features').innerHTML = f.length
+    ? hbars(f.slice(0, 12), r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => `${fmt(r.count)} · ${r.users} ${r.users === 1 ? 'person' : 'people'}`)
+    : '<div class="empty">Feature tracking starts with app version 1.0.26. Until then you see sign-ins and photos.</div>';
+
+  barChart($('hourChart'), data.hours || [], 'photos', r => `<b>${String(r.hour).padStart(2,'0')}:00–${String(r.hour).padStart(2,'0')}:59</b>${fmt(r.photos)} photos`, {noGrid:true});
+
+  renderUsers(); renderProjects();
+}
+
+const USER_COLS = [
+  ['name', 'Name'], ['platform', 'Platform'], ['last_seen', 'Last seen'], ['photos_period', 'Photos', true],
+  ['photos', 'All photos', true], ['projects', 'Projects', true], ['top_feature', 'Top feature'],
+];
+function renderUsers(){
+  const q = $('userSearch').value.trim().toLowerCase();
+  let rows = (data.users || []).filter(u => !q || (u.name || '').toLowerCase().includes(q));
+  rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey];
+    if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+    return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  $('userCount').textContent = `${rows.length} of ${(data.users || []).length}`;
+  const head = '<thead><tr>' + USER_COLS.map(([k, l, num]) => `<th data-k="${k}" class="${num ? 'num' : ''}">${l}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead>';
+  const body = '<tbody>' + rows.map(u => {
+    const live = u.last_seen && (Date.now() - new Date(u.last_seen)) < 86400000;
+    return `<tr data-id="${u.id}">
+      <td>${live ? '<span class="live"></span>' : ''}${esc(u.name)}</td>
+      <td><span class="pf">${u.platform in PF_COLOR ? `<span class="dot" style="background:${PF_COLOR[u.platform]}"></span>` : ''}${esc(u.platform)}</span></td>
+      <td class="muted">${ago(u.last_seen)}</td>
+      <td class="num">${fmt(u.photos_period)}</td><td class="num muted">${fmt(u.photos)}</td><td class="num">${u.projects}</td>
+      <td class="muted">${esc(FEATURE_LABEL[u.top_feature] || u.top_feature || '—')}</td></tr>`; }).join('') + '</tbody>';
+  $('usersTbl').innerHTML = head + body;
+  $('usersTbl').querySelectorAll('th').forEach(th => th.onclick = () => {
+    const k = th.dataset.k; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'name' || k === 'platform') ? 1 : -1; } renderUsers(); });
+  $('usersTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openUser(tr.dataset.id));
+}
+
+function renderProjects(){
+  const rows = data.projects || [];
+  $('projTbl').innerHTML = '<thead><tr><th>Project</th><th class="num">Members</th><th class="num">Props</th><th class="num">Out now</th><th>Last activity</th></tr></thead><tbody>'
+    + rows.map(p => `<tr style="cursor:default"><td>${esc(p.name)}</td><td class="num">${p.members}</td><td class="num">${fmt(p.props)}</td><td class="num">${fmt(p.out_now)}</td><td class="muted">${ago(p.last_activity)}</td></tr>`).join('') + '</tbody>';
+}
+
+async function openUser(id){
+  const u = (data.users || []).find(x => x.id === id); if (!u) return;
+  const dr = $('drawer'); $('scrim').classList.remove('hidden'); dr.classList.remove('hidden');
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(u.name)}</h3>
+    <div class="meta">${esc(u.platform)} · last seen ${ago(u.last_seen)} · joined ${new Date(u.signed_up).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</div>
+    <div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>`;
+  $('dClose').onclick = closeUser;
+  const { data: d, error } = await sb.rpc('admin_user', { p_user: id, p_days: days });
+  if (error) { dr.insertAdjacentHTML('beforeend', `<div class="err">${esc(error.message)}</div>`); return; }
+  const byDay = Object.fromEntries((d.photo_days || []).map(r => [r.day, r.photos]));
+  const series = (data.daily || []).map(r => ({ day: r.day, photos: byDay[r.day] || 0 }));
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(u.name)}</h3>
+    <div class="meta">${esc(u.platform)} · last seen ${ago(u.last_seen)} · joined ${new Date(u.signed_up).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+      <div class="tile"><div class="k">Photos</div><div class="v">${fmt(u.photos_period)}</div><div class="s">last ${days} days</div></div>
+      <div class="tile"><div class="k">All photos</div><div class="v">${fmt(u.photos)}</div><div class="s">all time</div></div>
+      <div class="tile"><div class="k">Projects</div><div class="v">${u.projects}</div><div class="s">member of</div></div></div>
+    <h4>Photos per day</h4><div class="chart mini" id="uChart"></div>
+    <h4>Features used</h4>${(d.features || []).length ? hbars(d.features, r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => fmt(r.count)) : '<div class="empty">No feature data yet (starts with 1.0.26).</div>'}
+    <h4>Projects</h4><div class="list">${(d.projects || []).map(p => `<div><span>${esc(p.name)} <span class="muted">· ${esc(p.role || 'member')}</span></span><span>${fmt(p.photos)} photos</span></div>`).join('') || '<span class="muted">None</span>'}</div>
+    ${(d.recent || []).length ? `<h4>Recent activity</h4><div class="list">${d.recent.slice(0, 25).map(e => `<div><span>${esc(FEATURE_LABEL[e.event] || e.event)}${e.screen ? ` <span class="muted">· ${esc(e.screen)}</span>` : ''}</span><span>${ago(e.created_at)}</span></div>`).join('')}</div>` : ''}`;
+  $('dClose').onclick = closeUser;
+  barChart($('uChart'), series, 'photos', r => `<b>${dayLabel(r.day)}</b>${fmt(r.photos)} photos`, {noGrid:true});
+}
+function closeUser(){ $('drawer').classList.add('hidden'); $('scrim').classList.add('hidden'); hideTip(); }
+$('scrim').onclick = closeUser;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUser(); });
+
+async function load(){
+  $('refresh').disabled = true; $('updated').textContent = 'Loading…';
+  const { data: d, error } = await sb.rpc('admin_stats', { p_days: days });
+  $('refresh').disabled = false;
+  if (error) {
+    if (/forbidden/i.test(error.message)) { await sb.auth.signOut(); showLogin('This account does not have access to stats.'); }
+    else $('updated').textContent = 'Could not load: ' + error.message;
+    return;
+  }
+  data = d; render();
+}
+
+function showLogin(msg){ $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('loginErr').textContent = msg || ''; }
+function showApp(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); load(); }
+
+$('loginForm').onsubmit = async e => {
+  e.preventDefault(); $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  $('loginBtn').disabled = false;
+  if (error) { $('loginErr').textContent = error.message; return; }
+  $('password').value = ''; showApp();
+};
+$('logout').onclick = async () => { await sb.auth.signOut(); showLogin(); };
+$('refresh').onclick = load;
+$('userSearch').oninput = renderUsers;
+$('period').querySelectorAll('button').forEach(b => {
+  b.classList.toggle('on', +b.dataset.d === days);
+  b.onclick = () => { days = +b.dataset.d; try { localStorage.setItem('pt_stats_days', days); } catch(e) {}
+    $('period').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); load(); };
+});
+
+sb.auth.getSession().then(({ data: { session } }) => session ? showApp() : showLogin());
+</script>
+</body>
+</html>
