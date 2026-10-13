@@ -180,7 +180,7 @@
     </div>
     <div class="card">
       <h2>Right now</h2>
-      <div class="hint">Latest pulls, returns and sign-ups across all projects · updates every 10 s</div>
+      <div class="hint">Latest pulls, returns and sign-ups across all projects · press ↻ to refresh</div>
       <div class="feed" id="feed"></div>
     </div>
   </div>
@@ -399,7 +399,7 @@ const KIND = {
   missing:  { label: 'Marked missing', color: 'var(--pink)' },
   signup:   { label: 'Signed up', color: '#FBBF24' },
 };
-let seenKeys = null, liveTimer = null, statsTimer = null, liveOk = false;
+let seenKeys = null, liveOk = false;
 async function loadLive(){
   const { data: d, error } = await sb.rpc('admin_live', { p_limit: 40 });
   const pill = $('livePill');
@@ -424,14 +424,14 @@ async function loadLive(){
   }).join('') : '<div class="empty">Nothing in the last 7 days.</div>';
   setTimeout(() => document.querySelectorAll('.fi.new').forEach(e => e.classList.remove('new')), 2500);
 }
-function startLive(){
-  stopLive();
-  loadLive();
-  liveTimer = setInterval(() => { if (!document.hidden) loadLive(); }, 10000);
-  statsTimer = setInterval(() => { if (!document.hidden) load(true); }, 60000);
-}
-function stopLive(){ clearInterval(liveTimer); clearInterval(statsTimer); }
-document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('app').classList.contains('hidden')) { loadLive(); } });
+// No background polling: data loads when the page opens, when you come back to it, or on ↻.
+let lastLoad = 0;
+function startLive(){ loadLive(); lastLoad = Date.now(); }
+function stopLive(){}
+document.addEventListener('visibilitychange', () => {
+  // Coming back to the tab after a while: one refresh, no timers
+  if (!document.hidden && !$('app').classList.contains('hidden') && Date.now() - lastLoad > 120000) { lastLoad = Date.now(); load(true); loadLive(); }
+});
 
 async function openUser(id){
   const u = (data.users || []).find(x => x.id === id); if (!u) return;
@@ -484,7 +484,7 @@ $('loginForm').onsubmit = async e => {
   $('password').value = ''; showApp();
 };
 $('logout').onclick = async () => { stopLive(); await sb.auth.signOut(); showLogin(); };
-$('refresh').onclick = () => { load(); loadLive(); };
+$('refresh').onclick = () => { lastLoad = Date.now(); load(); loadLive(); };
 $('userSearch').oninput = renderUsers;
 $('period').querySelectorAll('button').forEach(b => {
   b.classList.toggle('on', +b.dataset.d === days);
