@@ -250,7 +250,11 @@ const FEATURE_LABEL = {
   prop_pull_again:'Pull again', prop_found:'Marked found', search:'Search', pull_note_add:'Pull list item', pull_note_done:'Pull list done',
   warehouse_open:'Opened warehouse', warehouse_add:'Added warehouse', project_create:'Created project', project_join:'Joined project',
   invite_share:'Shared invite', all_props_open:'Opened All Props', actor_add:'Added actor', decor_add:'Added set', prop_edit:'Edited prop',
-  share_app:'Shared app', rate_app:'Rate app', ai_toggle:'Changed AI setting'
+  share_app:'Shared app', rate_app:'Rate app', ai_toggle:'Changed AI setting',
+  'tab:home':'Tab · Home', 'tab:activity':'Tab · Activity', 'tab:archive':'Tab · Archive', 'tab:profile':'Tab · Profile',
+  theme:'Changed theme (light/dark)', create_project:'Created project', join_project:'Joined project', onboarding_done:'Finished intro slides',
+  return:'Returned prop', pull_again:'Pulled again', undo_return:'Undid return', found:'Marked found', mark_missing:'Marked missing',
+  delete_prop:'Deleted prop', save_props:'Saved photos', rename_prop:'Renamed prop', rate_prompt:'Rating prompt'
 };
 let days = 30, data = null, sortKey = 'last_seen', sortDir = -1;
 try { const d = +localStorage.getItem('pt_stats_days'); if ([7,30,90].includes(d)) days = d; } catch(e) {}
