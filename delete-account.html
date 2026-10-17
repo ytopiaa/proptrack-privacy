@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropsTrack — Delete Your Account</title>
+  <meta name="description" content="How to delete your PropsTrack account and data.">
+  <meta name="theme-color" content="#0A0A12">
+  <meta property="og:title" content="PropsTrack — Delete Your Account">
+  <meta property="og:description" content="How to delete your PropsTrack account and data.">
+  <meta property="og:image" content="https://proptrack-privacy.vercel.app/og-icon.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/og-icon.png">
+  <link rel="apple-touch-icon" href="/og-icon.png">
+  <style>
+    :root{
+      --bg:#0A0A12; --card:#14142B; --line:rgba(255,255,255,.08); --surface:rgba(255,255,255,.04);
+      --text:#EDEDF0; --sub:#A6A6BF; --muted:rgba(255,255,255,.42);
+      --accent:#A78BFA; --accent2:#7C5CFF; --green:#6EE7B7; --pink:#F472B6; --amber:#FBBF24;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      margin:0; color:var(--text); background:var(--bg);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.65; min-height:100vh;
+      background-image:
+        radial-gradient(700px 420px at 15% -10%, rgba(124,92,255,.28), transparent 70%),
+        radial-gradient(600px 380px at 100% 10%, rgba(244,114,182,.12), transparent 70%);
+      background-repeat:no-repeat;
+    }
+    .wrap{max-width:760px; margin:0 auto; padding:48px 16px 64px}
+
+    header{display:flex; align-items:center; gap:16px; margin-bottom:28px}
+    header img{width:64px; height:64px; border-radius:16px; box-shadow:0 10px 30px rgba(124,92,255,.35)}
+    .brand{font-size:15px; font-weight:600; color:var(--sub); letter-spacing:.2px}
+    .brand b{color:var(--accent)}
+    h1{margin:2px 0 0; font-size:32px; line-height:1.15; letter-spacing:-.5px;
+       background:linear-gradient(90deg,#fff 0%,#D9CCFF 55%,var(--accent) 100%);
+       -webkit-background-clip:text; background-clip:text; color:transparent}
+    .pill{display:inline-flex; align-items:center; gap:8px; margin:0 0 26px; padding:6px 12px; border-radius:999px;
+          background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.25); color:var(--accent); font-size:13px; font-weight:600}
+    .pill i{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green)}
+    .intro{color:var(--sub); font-size:17px; margin:0 0 28px}
+
+    section{
+      position:relative; background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      border:1px solid var(--line); border-radius:18px; padding:22px 22px 20px 70px; margin:0 0 14px;
+    }
+    section .n{
+      position:absolute; left:20px; top:22px; width:34px; height:34px; border-radius:11px;
+      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;
+      color:var(--accent); background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.22);
+    }
+    section h2{margin:4px 0 6px; font-size:18px; letter-spacing:-.2px}
+    section p{margin:0; color:var(--sub); font-size:15.5px}
+    section.ai{border-color:rgba(167,139,250,.35); background:linear-gradient(135deg, rgba(124,92,255,.16), rgba(20,20,43,.6))}
+    section.ai .n{color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none}
+    .tag{display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700;
+         letter-spacing:.4px; text-transform:uppercase; vertical-align:2px; color:var(--bg); background:var(--accent)}
+    section.del .n{color:var(--pink); background:rgba(244,114,182,.10); border-color:rgba(244,114,182,.25)}
+    section.sec .n{color:var(--green); background:rgba(110,231,183,.10); border-color:rgba(110,231,183,.25)}
+    a{color:var(--accent); text-decoration:none; font-weight:600}
+    a:hover{text-decoration:underline}
+    kbd{font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:0 6px}
+
+    .contact{
+      margin-top:26px; padding:24px; border-radius:18px; text-align:center;
+      background:linear-gradient(135deg, rgba(124,92,255,.22), rgba(244,114,182,.10)); border:1px solid rgba(167,139,250,.3)
+    }
+    .contact h2{margin:0 0 4px; font-size:18px}
+    .contact p{margin:0 0 14px; color:var(--sub)}
+    .btn{display:inline-block; padding:12px 20px; border-radius:14px; color:#fff; font-weight:700;
+         background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 8px 24px rgba(124,92,255,.35)}
+    .btn:hover{text-decoration:none; opacity:.92}
+    footer{margin-top:28px; text-align:center; color:var(--muted); font-size:13px}
+    footer a{color:var(--sub); font-weight:500}
+
+    @media (max-width:520px){
+      .wrap{padding-top:32px}
+      h1{font-size:26px}
+      header img{width:54px; height:54px}
+      section{padding:18px 16px 16px 60px}
+      section .n{left:14px; top:18px; width:32px; height:32px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="og-icon.png" alt="PropsTrack logo">
+    <div>
+      <div class="brand">Props<b>Track</b></div>
+      <h1>Delete Your Account</h1>
+    </div>
+  </header>
+
+  <div class="pill"><i></i>PropsTrack: Film Prop Tracker · by Martin Peev</div>
+  <p class="intro">You can delete your PropsTrack account and personal data at any time, directly in the app or by email.</p>
+
+  <section class="del">
+    <div class="n">1</div>
+    <h2>Delete in the app</h2>
+    <p>Open PropsTrack, go to <kbd>Profile</kbd>, scroll down and tap <kbd>Delete my account</kbd>, then confirm with <kbd>Delete Permanently</kbd>. Your account is deleted straight away and you are signed out.</p>
+  </section>
+
+  <section class="del">
+    <div class="n">2</div>
+    <h2>Or ask us by email</h2>
+    <p>If you can no longer open the app, email <a href="mailto:propstrack@icloud.com?subject=Delete%20my%20PropsTrack%20account">propstrack@icloud.com</a> from the address you signed up with and write "Delete my account". We will delete it within 30 days and confirm by email.</p>
+  </section>
+
+  <section>
+    <div class="n">3</div>
+    <h2>What is deleted</h2>
+    <p>Your account and sign-in details, your name, email address, profile photo, push notification token, your membership of every project, and the usage statistics linked to your account.</p>
+  </section>
+
+  <section>
+    <div class="n">4</div>
+    <h2>What is kept</h2>
+    <p>Props, photos and notes you logged in a project are part of that production's shared records, so they stay with the project for the rest of the crew, no longer linked to your account. A project admin can delete them, or the whole project, at any time; you can also ask us by email to remove them. Backups held by our hosting provider are overwritten within 30 days.</p>
+  </section>
+
+  <div class="contact">
+    <h2>Questions?</h2>
+    <p>We're happy to help with anything about your data.</p>
+    <a class="btn" href="mailto:propstrack@icloud.com">propstrack@icloud.com</a>
+  </div>
+
+  <footer>© 2026 PropsTrack · <a href="/">Privacy Policy</a></footer>
+</div>
+</body>
+</html>
