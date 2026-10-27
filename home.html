@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropsTrack — The prop tracker for film &amp; TV</title>
+  <meta name="description" content="Snap a photo, AI names the prop, and your whole art department sees what's pulled and what's back — live. Free on iPhone, iPad and Android.">
+  <meta name="theme-color" content="#0A0A12">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PropsTrack">
+  <meta property="og:title" content="PropsTrack — The prop tracker for film & TV">
+  <meta property="og:description" content="Snap a photo, AI names the prop, and your whole crew sees what's pulled and what's back — live.">
+  <meta property="og:url" content="https://propstrack.com/">
+  <meta property="og:image" content="https://propstrack.com/og-icon.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="apple-itunes-app" content="app-id=6780033138">
+  <link rel="icon" href="/og-icon.png">
+  <link rel="apple-touch-icon" href="/og-icon.png">
+  <style>
+    :root{
+      --bg:#0A0A12; --card:#14142B; --line:rgba(255,255,255,.08);
+      --text:#EDEDF0; --sub:#A6A6BF; --muted:rgba(255,255,255,.45);
+      --accent:#A78BFA; --accent2:#7C5CFF; --green:#6EE7B7; --pink:#F472B6; --sky:#38BDF8; --amber:#FBBF24;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+    body{margin:0;color:var(--text);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;
+      background-image:radial-gradient(900px 520px at 10% -10%, rgba(124,92,255,.30), transparent 70%),radial-gradient(700px 460px at 100% 0%, rgba(244,114,182,.14), transparent 70%);background-repeat:no-repeat}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+    nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+    .logo img{width:34px;height:34px;border-radius:9px}
+    .logo b{color:var(--accent)}
+    .navlinks{display:flex;gap:22px;font-size:15px;color:var(--sub)}
+    .navlinks a:hover{color:var(--text)}
+
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:40px 0 70px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);color:var(--accent);font-size:13px;font-weight:600}
+    .pill i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+    h1{font-size:56px;line-height:1.04;letter-spacing:-1.5px;margin:18px 0 18px;
+      background:linear-gradient(95deg,#fff 0%,#E4DBFF 50%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .lead{font-size:19px;color:var(--sub);max-width:520px;margin:0 0 30px}
+    .stores{display:flex;gap:12px;flex-wrap:wrap}
+    .store{display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:14px;font-weight:700;font-size:15px;transition:transform .15s}
+    .store:hover{transform:translateY(-2px)}
+    .store svg{width:22px;height:22px;flex-shrink:0}
+    .store small{display:block;font-size:11px;font-weight:500;opacity:.8;line-height:1}
+    .store.ios{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 10px 30px rgba(124,92,255,.4)}
+    .store.play{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+    .free{margin-top:14px;font-size:13px;color:var(--muted)}
+
+    .phones{position:relative;height:560px}
+    .phone{position:absolute;width:250px;border-radius:38px;overflow:hidden;border:6px solid #1c1c2e;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06)}
+    .phone img{display:block;width:100%}
+    .phone.a{right:150px;top:30px;transform:rotate(-6deg);z-index:1}
+    .phone.b{right:10px;top:0;transform:rotate(4deg);z-index:2}
+
+    section{padding:70px 0}
+    .eyebrow{color:var(--accent);font-weight:700;font-size:13px;letter-spacing:1.4px;text-transform:uppercase}
+    h2{font-size:38px;letter-spacing:-.8px;margin:8px 0 12px;line-height:1.1}
+    .sec-lead{color:var(--sub);font-size:17px;max-width:620px;margin:0 0 40px}
+
+    .feature{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;margin-bottom:70px}
+    .feature.rev .ftext{order:2}
+    .shot{display:flex;justify-content:center}
+    .shot .phone{position:relative;width:270px;transform:none}
+    .ftext h3{font-size:30px;letter-spacing:-.5px;margin:10px 0 12px;line-height:1.15}
+    .ftext p{color:var(--sub);font-size:17px;margin:0 0 16px}
+    .ftext ul{list-style:none;padding:0;margin:0}
+    .ftext li{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:15.5px;margin:9px 0}
+    .ftext li:before{content:"";flex-shrink:0;width:18px;height:18px;margin-top:3px;border-radius:6px;background:rgba(167,139,250,.18) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A78BFA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
+    .tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .tag.p{background:rgba(167,139,250,.14);color:var(--accent)} .tag.g{background:rgba(110,231,183,.12);color:var(--green)}
+    .tag.s{background:rgba(56,189,248,.12);color:var(--sky)} .tag.k{background:rgba(244,114,182,.12);color:var(--pink)}
+
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:20px;padding:24px}
+    .card .ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:rgba(167,139,250,.14)}
+    .card .ic svg{width:22px;height:22px}
+    .card h4{margin:0 0 6px;font-size:18px}
+    .card p{margin:0;color:var(--sub);font-size:15px}
+
+    .roles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px}
+    .roles span{padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--sub);font-size:15px}
+
+    .cta{text-align:center;border-radius:28px;padding:56px 24px;background:linear-gradient(135deg,rgba(124,92,255,.28),rgba(244,114,182,.12));border:1px solid rgba(167,139,250,.3)}
+    .cta h2{margin-top:0}
+    .cta .stores{justify-content:center}
+
+    footer{padding:40px 0 50px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;border-top:1px solid var(--line);margin-top:40px}
+    footer .links{display:flex;gap:20px;flex-wrap:wrap}
+    footer a:hover{color:var(--text)}
+
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr;padding-top:20px;text-align:center}
+      .lead{margin-left:auto;margin-right:auto}
+      .stores{justify-content:center}
+      .phones{height:470px;max-width:420px;margin:0 auto;width:100%}
+      .phone{width:210px}
+      .phone.a{right:auto;left:8%} .phone.b{right:6%}
+      h1{font-size:42px}
+      .feature,.feature.rev{grid-template-columns:1fr;gap:28px;text-align:center}
+      .feature.rev .ftext{order:0}
+      .ftext ul{display:inline-block;text-align:left}
+      .grid{grid-template-columns:1fr}
+      h2{font-size:30px}
+      .navlinks .hide-sm{display:none}
+    }
+    @media (max-width:420px){ h1{font-size:36px} .phone{width:180px} .phones{height:400px} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="/"><img src="/og-icon.png" alt=""><span>Props<b>Track</b></span></a>
+    <div class="navlinks">
+      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#crew">For crews</a>
+      <a href="/privacy">Privacy</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="pill"><i></i>Free on iPhone, iPad &amp; Android</span>
+      <h1>The prop tracker for film &amp; TV art departments</h1>
+      <p class="lead">Snap a photo, AI names the prop, and your whole crew sees what's pulled and what's back — live, across every warehouse.</p>
+      <div class="stores">
+        <a class="store ios" href="https://apps.apple.com/app/id6780033138">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.1 1.72-3.12 1.8-3.17-.98-1.43-2.5-1.63-3.05-1.65-1.3-.13-2.53.76-3.19.76-.66 0-1.67-.74-2.75-.72-1.41.02-2.72.82-3.45 2.09-1.47 2.55-.38 6.33 1.06 8.4.7 1.01 1.53 2.15 2.62 2.11 1.05-.04 1.45-.68 2.72-.68 1.27 0 1.63.68 2.74.66 1.13-.02 1.85-1.03 2.54-2.05.8-1.17 1.13-2.31 1.15-2.37-.03-.01-2.2-.85-2.22-3.36zM14.3 6.42c.58-.7.97-1.68.86-2.65-.83.03-1.84.55-2.44 1.25-.53.62-1 1.62-.88 2.57.93.07 1.88-.47 2.46-1.17z"/></svg>
+          <span><small>Download on the</small>App Store</span></a>
+        <a class="store play" href="https://play.google.com/store/apps/details?id=com.proptrack.app">
+          <svg viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 2.2 13.4 12l-9.8 9.8c-.36-.2-.6-.6-.6-1.1V3.3c0-.5.24-.9.6-1.1z"/><path fill="#FBBC04" d="m16.8 15.4-3.4-3.4 3.4-3.4 3.9 2.2c1.1.6 1.1 1.8 0 2.4l-3.9 2.2z"/><path fill="#EA4335" d="M16.8 15.4 13.4 12l-9.8 9.8c.37.2.85.2 1.33-.08l11.87-6.32z"/><path fill="#4285F4" d="M16.8 8.6 4.93 2.28C4.45 2 3.97 2 3.6 2.2L13.4 12l3.4-3.4z"/></svg>
+          <span><small>Get it on</small>Google Play</span></a>
+      </div>
+      <div class="free">No credit card. Sign in with Apple, Google or email.</div>
+    </div>
+    <div class="phones">
+      <div class="phone a"><img src="/img/03_warehouse.webp" alt="Warehouse with pulled props"></div>
+      <div class="phone b"><img src="/img/02_home.webp" alt="PropsTrack home with warehouses"></div>
+    </div>
+  </header>
+</div>
+
+<div class="wrap" id="features">
+  <section style="padding-top:20px">
+    <div class="feature">
+      <div class="ftext">
+        <span class="tag p">Snap it</span>
+        <h3>Photo in, name out</h3>
+        <p>Take a photo or pick from the gallery. AI gives the prop a short name in your language, so nobody types on set.</p>
+        <ul><li>Add several props in a row with "Add another"</li><li>Crop to just the prop on a busy shelf</li><li>AI naming is optional and can be turned off</li></ul>
+      </div>
+      <div class="shot"><div class="phone"><img src="/img/05_capture.webp" alt="Adding a prop photo"></div></div>
+    </div>
+
+    <div class="feature rev">
+      <div class="ftext">
+        <span class="tag s">Know where everything is</span>
+        <h3>Every prop knows where it came from</h3>
+        <p>Rental houses, your own stock, the costume room — set them up once and see at a glance how much is out from each.</p>
+        <ul><li>Pulled, returned and missing counts per warehouse</li><li>Filter by set or actor</li><li>Return in one tap — Undo if you slip</li></ul>
+      </div>
+      <div class="shot"><div class="phone"><img src="/img/03_warehouse.webp" alt="Warehouse view"></div></div>
+    </div>
+
+    <div class="feature" id="crew">
+      <div class="ftext">
+        <span class="tag g">Your whole crew, in sync</span>
+        <h3>One list for the whole art department</h3>
+        <p>Invite your team with a code. Everyone sees the same props, live, with a timeline of who pulled and returned what.</p>
+        <ul><li>Roles: admin, managers and members</li><li>Activity day by day</li><li>Works across multiple productions</li></ul>
+      </div>
+      <div class="shot"><div class="phone"><img src="/img/06_activity.webp" alt="Activity timeline"></div></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div style="text-align:center">
+      <div class="eyebrow">Built for the job</div>
+      <h2>Made for real prep and shoot days</h2>
+      <p class="sec-lead" style="margin-left:auto;margin-right:auto">Warehouses with no signal, a hundred props a day, a crew that changes every week.</p>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16.1a5 5 0 0 1 7 0"/><path d="M3 3l18 18"/></svg></div><h4>Works without signal</h4><p>Browse props and keep logging offline. Photos upload by themselves when you're back online.</p></div>
+      <div class="card"><div class="ic" style="background:rgba(110,231,183,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div><h4>Archive that makes sense</h4><p>Returned props grouped by date or warehouse. Pull anything again in one tap.</p></div>
+      <div class="card"><div class="ic" style="background:rgba(244,114,182,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h4>Private to your project</h4><p>Only members of a project see its photos. Delete your account any time, right in the app.</p></div>
+    </div>
+    <div class="roles">
+      <span>Set decorators</span><span>Set dressers</span><span>Prop masters</span><span>Art directors</span><span>Production designers</span><span>Art department assistants</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta">
+      <h2>Bring your next production into one list</h2>
+      <p class="sec-lead" style="margin:0 auto 26px">Free to download. Your crew is set up in minutes.</p>
+      <div class="stores">
+        <a class="store ios" href="https://apps.apple.com/app/id6780033138"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.1 1.72-3.12 1.8-3.17-.98-1.43-2.5-1.63-3.05-1.65-1.3-.13-2.53.76-3.19.76-.66 0-1.67-.74-2.75-.72-1.41.02-2.72.82-3.45 2.09-1.47 2.55-.38 6.33 1.06 8.4.7 1.01 1.53 2.15 2.62 2.11 1.05-.04 1.45-.68 2.72-.68 1.27 0 1.63.68 2.74.66 1.13-.02 1.85-1.03 2.54-2.05.8-1.17 1.13-2.31 1.15-2.37-.03-.01-2.2-.85-2.22-3.36zM14.3 6.42c.58-.7.97-1.68.86-2.65-.83.03-1.84.55-2.44 1.25-.53.62-1 1.62-.88 2.57.93.07 1.88-.47 2.46-1.17z"/></svg><span><small>Download on the</small>App Store</span></a>
+        <a class="store play" href="https://play.google.com/store/apps/details?id=com.proptrack.app"><svg viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 2.2 13.4 12l-9.8 9.8c-.36-.2-.6-.6-.6-1.1V3.3c0-.5.24-.9.6-1.1z"/><path fill="#FBBC04" d="m16.8 15.4-3.4-3.4 3.4-3.4 3.9 2.2c1.1.6 1.1 1.8 0 2.4l-3.9 2.2z"/><path fill="#EA4335" d="M16.8 15.4 13.4 12l-9.8 9.8c.37.2.85.2 1.33-.08l11.87-6.32z"/><path fill="#4285F4" d="M16.8 8.6 4.93 2.28C4.45 2 3.97 2 3.6 2.2L13.4 12l3.4-3.4z"/></svg><span><small>Get it on</small>Google Play</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 PropsTrack</div>
+    <div class="links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/delete-account">Delete your account</a>
+      <a href="mailto:propstrack@icloud.com">propstrack@icloud.com</a>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
