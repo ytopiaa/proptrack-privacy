@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "has": [{ "type": "host", "value": "app.propstrack.com" }], "destination": "/web/index.html" }
+  ]
+}

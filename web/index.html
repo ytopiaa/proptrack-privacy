@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PropsTrack Web</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/og-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#0A0A12;--panel:#11111f;--card:#16162a;--card2:#1c1c34;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.12);--text:#EDEDF0;--sub:#A6A6BF;--muted:rgba(255,255,255,.42);
+--accent:#A78BFA;--accent2:#7C5CFF;--green:#6EE7B7;--pink:#F472B6;--sky:#38BDF8;--amber:#FBBF24;--red:#F87171}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.hide{display:none!important}
+
+/* ---------- login ---------- */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login .box{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 28px}
+.login h1{margin:14px 0 4px;font-size:22px}.login p{color:var(--sub);margin:0 0 22px;font-size:13.5px}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none}
+.inp:focus{border-color:rgba(167,139,250,.6)}
+.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.full{width:100%;padding:12px}
+.btn2{background:rgba(255,255,255,.06);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px 14px;font-weight:600;white-space:nowrap}
+.btn2:hover{background:rgba(255,255,255,.1)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:16px 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line2)}
+.msg{font-size:13px;margin-top:12px;min-height:18px}.msg.err{color:var(--red)}.msg.ok{color:var(--green)}
+.linkbtn{background:none;border:0;color:var(--accent);padding:0;font-size:13px}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:240px 1fr 320px;height:100vh}
+.app.noright{grid-template-columns:240px 1fr}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;padding:4px 8px 16px}
+.logo img{width:30px;height:30px;border-radius:8px}.logo b{color:var(--accent)}
+.proj{position:relative;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);margin-bottom:14px;cursor:pointer;width:100%;text-align:left}
+.proj small{display:block;color:var(--muted);font-size:11px}.proj b{font-size:15px;display:block;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projmenu{position:absolute;left:14px;right:14px;top:112px;z-index:20;background:var(--card2);border:1px solid var(--line2);border-radius:12px;padding:6px;box-shadow:0 20px 40px rgba(0,0,0,.5);max-height:60vh;overflow:auto}
+.projmenu button{display:flex;width:100%;justify-content:space-between;gap:8px;background:none;border:0;padding:9px 10px;border-radius:8px;text-align:left}
+.projmenu button:hover,.projmenu button.on{background:rgba(167,139,250,.14)}
+.projmenu small{color:var(--muted)}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--sub);text-decoration:none;font-weight:500;cursor:pointer}
+.nav a:hover{background:rgba(255,255,255,.04)}
+.nav a.on{background:rgba(167,139,250,.14);color:#fff}.nav a span.n{margin-left:auto;font-size:12px;color:var(--muted)}
+.nav a .ico{width:16px;text-align:center}
+.nav .dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.nav .whname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sect{font-size:11px;letter-spacing:1px;color:var(--muted);margin:16px 12px 4px;text-transform:uppercase}
+.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 6px 2px;border-top:1px solid var(--line)}
+.side-foot .who{flex:1;min-width:0}.side-foot .who b{font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-foot .who div{color:var(--muted);font-size:11.5px;text-transform:capitalize}
+.av{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:#7C5CFF;flex-shrink:0;background-size:cover;background-position:center}
+main{overflow:auto;padding:22px 28px 40px;min-width:0}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.top h1{font-size:24px;margin:0;letter-spacing:-.4px}.top .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px;box-shadow:0 0 0 3px rgba(110,231,183,.15)}
+.live.off{background:var(--muted);box-shadow:none}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0 12px;width:300px;color:var(--muted)}
+.search input{flex:1;background:none;border:0;outline:none;padding:9px 0;color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:6px}
+.stat{border-radius:16px;padding:14px 16px;border:1px solid var(--line);background:var(--card);text-align:left;cursor:pointer}
+.stat:hover{border-color:var(--line2)}
+.stat b{font-size:28px;display:block;letter-spacing:-.5px}.stat span{color:var(--sub);font-size:12.5px}
+.stat.p{background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(124,92,255,.08))}.stat.g b{color:var(--green)}.stat.r b{color:var(--red)}.stat.a b{color:var(--amber)}
+h3{font-size:13px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+h3 .act{margin-left:auto;text-transform:none;letter-spacing:0}
+.whs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.wh{border-radius:14px;padding:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:left;min-width:0}
+.wh:hover{border-color:var(--line2)}
+.wh b{display:block;font-size:13.5px;margin:8px 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wh .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;color:#0A0A12}
+.wh .pill.zero{background:rgba(255,255,255,.08)!important;color:var(--muted)}
+.wh .ic{width:26px;height:26px;border-radius:8px}
+.filters{display:flex;gap:8px;margin:4px 0 12px;flex-wrap:wrap;align-items:center}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);font-size:12.5px;background:none}
+.chip:hover{border-color:var(--line2)}
+.chip.on{background:rgba(167,139,250,.16);color:#fff;border-color:rgba(167,139,250,.35)}
+.sel{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12.5px;color:var(--sub);outline:none}
+.tablewrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:rgba(255,255,255,.015)}
+.thumb{width:44px;height:44px;border-radius:10px;background:#222 center/cover no-repeat;cursor:zoom-in;flex-shrink:0;border:0;padding:0}
+.name{min-width:160px}
+.name b{display:block;cursor:pointer}.name b:hover{color:var(--accent)}
+.name small{color:var(--muted);display:block;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tagw{font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;white-space:nowrap;display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.st{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st.out{background:rgba(167,139,250,.15);color:var(--accent)}.st.miss{background:rgba(248,113,113,.14);color:var(--red)}.st.ret{background:rgba(110,231,183,.12);color:var(--green)}
+.when small{color:var(--muted)}
+.acts{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.ab{background:transparent;border:1px solid var(--line2);color:var(--sub);border-radius:8px;padding:6px 10px;font-weight:600;font-size:12.5px}
+.ab:hover{background:rgba(255,255,255,.05)}
+.ab.g{border-color:rgba(110,231,183,.4);color:var(--green)}
+.ab.r{border-color:rgba(248,113,113,.35);color:var(--red)}
+.ab.p{border-color:rgba(167,139,250,.4);color:var(--accent)}
+.ab:disabled{opacity:.4}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.more{display:block;margin:12px auto 0}
+.right{background:var(--panel);border-left:1px solid var(--line);padding:22px 18px;overflow:auto}
+.right h2{font-size:16px;margin:0 0 4px}.right .sub{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.ev{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.ev .thumb{width:38px;height:38px;border-radius:9px}
+.ev .tx{min-width:0;flex:1}
+.ev b{font-size:13.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev p{margin:2px 0 0;color:var(--sub);font-size:12.5px}
+.ev p.g{color:var(--green)}.ev p.r{color:var(--red)}
+.ev time{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.day{font-size:11px;letter-spacing:1px;color:var(--muted);margin:14px 0 2px;text-transform:uppercase}
+.team{display:flex;gap:6px;margin:12px 0 6px;flex-wrap:wrap}
+.teamlist .row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.teamlist .row:last-child{border-bottom:0}
+.teamlist .row .n{flex:1}.teamlist .row .n small{display:block;color:var(--muted)}
+.role{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:capitalize;background:rgba(255,255,255,.06);color:var(--sub)}
+.role.admin{background:rgba(167,139,250,.16);color:var(--accent)}.role.manager{background:rgba(56,189,248,.14);color:var(--sky)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:10px 16px;align-items:center}
+.kv span{color:var(--muted)}
+code.inv{font-size:18px;letter-spacing:3px;background:rgba(167,139,250,.12);color:var(--accent);padding:6px 12px;border-radius:8px}
+
+/* modal + lightbox */
+.ov{position:fixed;inset:0;background:rgba(5,5,10,.72);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:22px;max-height:92vh;overflow:auto}
+.modal h2{margin:0 0 16px;font-size:18px}
+.modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.drop{border:1.5px dashed var(--line2);border-radius:14px;padding:22px;text-align:center;color:var(--sub);cursor:pointer;margin-bottom:14px}
+.drop.on{border-color:var(--accent);background:rgba(167,139,250,.06)}
+.prev{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+.prev div{width:64px;height:64px;border-radius:10px;background:#222 center/cover}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--sub);margin-top:6px}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:60;display:flex;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column;gap:12px;padding:24px}
+.lb img{max-width:92vw;max-height:84vh;border-radius:10px;object-fit:contain}
+.lb div{color:var(--sub)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line2);padding:10px 16px;border-radius:12px;z-index:70;box-shadow:0 10px 30px rgba(0,0,0,.4);font-size:13.5px}
+.toast.err{border-color:rgba(248,113,113,.5)}
+.loading{display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)}
+
+@media (max-width:1250px){.app{grid-template-columns:220px 1fr}.right{display:none}}
+@media (max-width:820px){
+  .app,.app.noright{grid-template-columns:1fr;height:auto}
+  aside{border-right:0;border-bottom:1px solid var(--line)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .search{width:100%;margin-left:0}
+  main{padding:18px 16px 40px}
+  .tablewrap{overflow-x:auto}
+  .projmenu{top:110px}
+}
+</style>
+</head>
+<body>
+
+<div id="boot" class="loading">Loading…</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="login" class="login hide">
+  <div class="box">
+    <img src="/og-icon.png" alt="" width="48" height="48" style="border-radius:12px">
+    <h1>PropsTrack Web</h1>
+    <p>Sign in with the same account you use in the app.</p>
+    <form id="loginForm">
+      <label class="field"><span>Email</span><input class="inp" id="email" type="email" autocomplete="email" required></label>
+      <label class="field"><span>Password</span><input class="inp" id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn full" id="loginBtn" type="submit">Sign in</button>
+    </form>
+    <div style="text-align:right;margin-top:10px"><button class="linkbtn" id="forgotBtn" type="button">Forgot password?</button></div>
+    <div class="or">or</div>
+    <button class="btn2" id="googleBtn" type="button" style="width:100%;padding:11px">Continue with Google</button>
+    <div class="msg" id="loginMsg"></div>
+    <p style="margin:18px 0 0;font-size:12.5px">Use Sign in with Apple on your iPhone? Type that email and tap “Forgot password?” to create a password for the web.</p>
+  </div>
+</div>
+
+<!-- ============ NEW PASSWORD (after reset link) ============ -->
+<div id="recover" class="login hide">
+  <div class="box">
+    <h1>Set a new password</h1>
+    <p>Choose a new password for your account.</p>
+    <form id="recoverForm">
+      <label class="field"><span>New password</span><input class="inp" id="newpass" type="password" minlength="6" autocomplete="new-password" required></label>
+      <button class="btn full" type="submit">Save password</button>
+    </form>
+    <div class="msg" id="recoverMsg"></div>
+  </div>
+</div>
+
+<!-- ============ NO PROJECT ============ -->
+<div id="noproj" class="login hide">
+  <div class="box">
+    <h1>No projects yet</h1>
+    <p>Create a project or join one with an invite code in the PropsTrack app, then come back here.</p>
+    <button class="btn2" id="logout2">Sign out</button>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app hide">
+  <aside>
+    <div class="logo"><img src="/og-icon.png" alt=""><span>Props<b>Track</b></span></div>
+    <button class="proj" id="projBtn" type="button"><div><small>PROJECT</small><b id="projName">—</b></div><span style="color:var(--muted)">▾</span></button>
+    <div class="projmenu hide" id="projMenu"></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="av" id="meAv">?</div>
+      <div class="who"><b id="meName">—</b><div id="meRole"></div></div>
+      <button class="ab" id="logout" title="Sign out">Sign out</button>
+    </div>
+  </aside>
+  <main id="main"></main>
+  <div class="right" id="right"></div>
+</div>
+
+<div id="overlay"></div>
+
+<script>
+'use strict';
+const SUPABASE_URL = 'https://hxtawtebartukulvavvj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6RWpVGy6w4aAhGs4TQMjGw_36NCPFDm'; // public key; data is protected by database rules
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' } });
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+const PALETTE = ['#38BDF8', '#6EE7B7', '#F472B6', '#A78BFA', '#FBBF24', '#34D399', '#FB923C', '#F87171'];
+const AV_COLORS = ['#7C5CFF', '#F472B6', '#38BDF8', '#34D399', '#FBBF24', '#FB923C', '#A78BFA'];
+const AUTO_NAME_RE = /^img \d+$/i;
+const PAGE = 100;
+
+const S = {
+  user: null, me: null, projects: [], pid: null, role: 'member',
+  props: [], whs: [], decors: [], actors: [], members: [],
+  view: 'overview', wh: null, q: '', decor: '', actor: '', sort: 'new', limit: PAGE,
+  channel: null, live: false, menu: false,
+};
+
+/* ---------- helpers ---------- */
+function toast(t, err) {
+  const d = document.createElement('div'); d.className = 'toast' + (err ? ' err' : ''); d.textContent = t;
+  document.body.appendChild(d); setTimeout(() => d.remove(), err ? 5000 : 2600);
+}
+function hexA(hex, a) {
+  const h = (hex || '#A78BFA').replace('#', ''); if (h.length !== 6) return `rgba(167,139,250,${a})`;
+  return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`;
+}
+function parseWh(w, i) {
+  let color = w.color, icon = w.icon, loc = w.location || '';
+  const m = loc.match(/\[meta:(.*?)\|(.*?)\]/);
+  if (m) { color = color || m[1]; icon = icon || m[2]; loc = loc.replace(/\[meta:.*?\]/, '').trim(); }
+  if (!/^#[0-9a-f]{6}$/i.test(color || '')) color = PALETTE[i % PALETTE.length];
+  return { ...w, color, icon, location: loc };
+}
+const whById = id => S.whs.find(w => w.id === id);
+const actorById = id => S.actors.find(a => a.id === id);
+const initials = n => (String(n || '?').trim()[0] || '?').toUpperCase();
+function avHtml(name, url, i) {
+  if (url && /^https?:/.test(url)) return `<div class="av" style="background-image:url('${esc(url)}')" title="${esc(name)}"></div>`;
+  const c = AV_COLORS[(i || 0) % AV_COLORS.length];
+  return `<div class="av" style="background:${c}${c === '#FBBF24' ? ';color:#0A0A12' : ''}" title="${esc(name)}">${esc(initials(name))}</div>`;
+}
+function dayLabel(d) {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  const diff = Math.round((t - x) / 864e5);
+  if (diff === 0) return 'Today'; if (diff === 1) return 'Yesterday';
+  return new Date(d).toLocaleDateString(undefined, { weekday: diff < 7 ? 'long' : undefined, day: 'numeric', month: 'short', year: x.getFullYear() !== t.getFullYear() ? 'numeric' : undefined });
+}
+const hm = d => new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+function whenTxt(d) { if (!d) return ''; const l = dayLabel(d); return (l === 'Today' || l === 'Yesterday') ? `${l} ${hm(d)}` : l; }
+const statusOf = p => p.is_missing ? 'missing' : (p.status === 'returned' ? 'returned' : 'pulled');
+const greet = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
+const firstName = n => String(n || '').trim().split(/\s+/)[0] || '';
+const canManage = () => S.role === 'admin' || S.role === 'manager';
+const img = p => p.thumb_url || p.photo_url || '';
+
+/* ---------- screens ---------- */
+function show(id) { for (const s of ['boot', 'login', 'recover', 'noproj', 'app']) $(s).classList.toggle('hide', s !== id); }
+
+/* ---------- auth ---------- */
+$('loginForm').onsubmit = async e => {
+  e.preventDefault(); const m = $('loginMsg'); m.className = 'msg'; m.textContent = ''; $('loginBtn').disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  $('loginBtn').disabled = false;
+  if (error) { m.className = 'msg err'; m.textContent = error.message === 'Invalid login credentials' ? 'Wrong email or password.' : error.message; }
+};
+$('googleBtn').onclick = async () => {
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+  if (error) { $('loginMsg').className = 'msg err'; $('loginMsg').textContent = error.message; }
+};
+$('forgotBtn').onclick = async () => {
+  const email = $('email').value.trim(); const m = $('loginMsg');
+  if (!email) { m.className = 'msg err'; m.textContent = 'Type your email above first.'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  m.className = 'msg ' + (error ? 'err' : 'ok');
+  m.textContent = error ? error.message : 'If this email has an account, a reset link is on its way.';
+};
+$('recoverForm').onsubmit = async e => {
+  e.preventDefault(); const m = $('recoverMsg');
+  const { error } = await sb.auth.updateUser({ password: $('newpass').value });
+  m.className = 'msg ' + (error ? 'err' : 'ok'); m.textContent = error ? error.message : 'Saved. You can use it in the app too.';
+  if (!error) setTimeout(() => start(), 900);
+};
+const doLogout = async () => { if (S.channel) sb.removeChannel(S.channel); await sb.auth.signOut(); location.reload(); };
+$('logout').onclick = doLogout; $('logout2').onclick = doLogout;
+
+let recovering = false;
+sb.auth.onAuthStateChange((ev, session) => {
+  if (ev === 'PASSWORD_RECOVERY') { recovering = true; show('recover'); return; }
+  if (ev === 'SIGNED_IN' && !S.user && !recovering) start();
+  if (ev === 'SIGNED_OUT') { S.user = null; show('login'); }
+});
+
+/* ---------- data ---------- */
+async function start() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { show('login'); return; }
+  if (recovering) return;
+  S.user = session.user;
+  const [{ data: prof }, { data: mem, error }] = await Promise.all([
+    sb.from('profiles').select('full_name,avatar').eq('id', S.user.id).maybeSingle(),
+    sb.from('project_members').select('role, joined_at, projects(id,name,invite_code,created_at)').eq('user_id', S.user.id),
+  ]);
+  if (error) { toast('Could not load projects: ' + error.message, true); show('login'); return; }
+  S.me = { name: prof?.full_name || S.user.user_metadata?.full_name || S.user.email, avatar: prof?.avatar };
+  S.projects = (mem || []).filter(m => m.projects).map(m => ({ ...m.projects, role: m.role || 'member' }))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  if (!S.projects.length) { show('noproj'); return; }
+  const last = store.get('pt_web_pid');
+  await openProject(S.projects.find(p => p.id === last) ? last : S.projects[0].id);
+  show('app');
+}
+
+async function fetchAllProps(pid) {
+  const out = []; const step = 1000;
+  for (let from = 0; from < 20000; from += step) {
+    const { data, error } = await sb.from('props')
+      .select('id,warehouse,user_name,user_id,photo_url,thumb_url,status,taken_at,returned_at,note,is_missing,name,decor,actor_id')
+      .eq('project_id', pid).order('taken_at', { ascending: false }).range(from, from + step - 1);
+    if (error) throw error;
+    out.push(...data); if (data.length < step) break;
+  }
+  return out;
+}
+
+async function loadProject() {
+  const pid = S.pid;
+  const [props, wh, de, ac, mb] = await Promise.all([
+    fetchAllProps(pid),
+    sb.from('external_warehouses').select('*').eq('project_id', pid).order('created_at'),
+    sb.from('decors').select('id,name').eq('project_id', pid).order('name'),
+    sb.from('actors').select('id,name').eq('project_id', pid).order('name'),
+    sb.from('project_members').select('user_id,role,joined_at,profiles(full_name,avatar)').eq('project_id', pid),
+  ]);
+  if (pid !== S.pid) return; // switched meanwhile
+  S.props = props;
+  S.whs = (wh.data || []).map(parseWh);
+  S.decors = de.data || []; S.actors = ac.data || [];
+  const order = { admin: 0, manager: 1, member: 2 };
+  S.members = (mb.data || []).map(m => ({ id: m.user_id, role: m.role || 'member', joined_at: m.joined_at, name: m.profiles?.full_name || 'Unknown', avatar: m.profiles?.avatar }))
+    .sort((a, b) => (order[a.role] - order[b.role]) || a.name.localeCompare(b.name));
+}
+
+async function openProject(pid) {
+  S.pid = pid; store.set('pt_web_pid', pid);
+  const p = S.projects.find(x => x.id === pid); S.role = p?.role || 'member';
+  S.view = 'overview'; S.wh = null; S.q = ''; S.decor = ''; S.actor = ''; S.limit = PAGE; S.menu = false;
+  $('main').innerHTML = '<div class="empty">Loading project…</div>'; $('right').innerHTML = '';
+  renderSide();
+  try { await loadProject(); } catch (e) { toast('Could not load: ' + e.message, true); }
+  subscribe(); render();
+}
+
+/* ---------- realtime ---------- */
+function subscribe() {
+  if (S.channel) sb.removeChannel(S.channel);
+  const pid = S.pid;
+  S.channel = sb.channel('web-' + pid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'props', filter: `project_id=eq.${pid}` }, pl => {
+      if (pid !== S.pid) return;
+      if (pl.eventType === 'DELETE') S.props = S.props.filter(p => p.id !== pl.old.id);
+      else {
+        const row = pl.new; const i = S.props.findIndex(p => p.id === row.id);
+        if (i >= 0) S.props[i] = { ...S.props[i], ...row };
+        else { S.props.unshift(row); if (row.user_id !== S.user.id) toast(`${row.user_name || 'Someone'} added a prop`); }
+      }
+      render();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'external_warehouses', filter: `project_id=eq.${pid}` }, () => softReload())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'project_members', filter: `project_id=eq.${pid}` }, () => softReload())
+    .subscribe(st => { S.live = st === 'SUBSCRIBED'; const el = document.querySelector('.live'); if (el) el.classList.toggle('off', !S.live); });
+}
+let reloading = false;
+async function softReload() {
+  if (reloading || !S.pid) return; reloading = true;
+  try { await loadProject(); render(); } catch {} finally { reloading = false; }
+}
+// Safety net: refresh every 2 min and when the tab comes back.
+setInterval(() => { if (!document.hidden && S.pid) softReload(); }, 120000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.pid) softReload(); });
+
+/* ---------- actions ---------- */
+async function upd(id, patch, label) {
+  const p = S.props.find(x => x.id === id); if (!p) return;
+  const before = { ...p }; Object.assign(p, patch); render();
+  const { error } = await sb.from('props').update(patch).eq('id', id);
+  if (error) { Object.assign(p, before); render(); toast('Could not save: ' + error.message, true); }
+  else if (label) toast(label);
+}
+const now = () => new Date().toISOString();
+const A = {
+  ret: id => upd(id, { status: 'returned', is_missing: false, returned_at: now() }, 'Returned'),
+  pull: id => upd(id, { status: 'pulled', is_missing: false, returned_at: null }, 'Pulled again'),
+  miss: id => { if (confirm('Move this prop to Missing?')) upd(id, { status: 'missing', is_missing: true }, 'Moved to Missing'); },
+  found: id => upd(id, { status: 'pulled', is_missing: false }, 'Marked as found'),
+};
+
+/* ---------- filtering ---------- */
+function listFor(view) {
+  let L = S.props;
+  if (view === 'pull') L = L.filter(p => !p.is_missing && p.status === 'pulled');
+  else if (view === 'archive') L = L.filter(p => !p.is_missing && p.status === 'returned');
+  else if (view === 'missing') L = L.filter(p => p.is_missing);
+  else if (view === 'wh') L = L.filter(p => p.warehouse === S.wh && !p.is_missing);
+  return L;
+}
+function applyFilters(L) {
+  const q = S.q.trim().toLowerCase();
+  if (S.decor) L = L.filter(p => p.decor === S.decor);
+  if (S.actor) L = L.filter(p => p.actor_id === S.actor);
+  if (q) L = L.filter(p => [p.name, p.note, p.decor, p.user_name, whById(p.warehouse)?.name, actorById(p.actor_id)?.name].some(v => String(v || '').toLowerCase().includes(q)));
+  const by = {
+    new: (a, b) => new Date(b.taken_at) - new Date(a.taken_at),
+    old: (a, b) => new Date(a.taken_at) - new Date(b.taken_at),
+    name: (a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true }),
+    wh: (a, b) => String(whById(a.warehouse)?.name || '~').localeCompare(String(whById(b.warehouse)?.name || '~')),
+  }[S.sort];
+  return [...L].sort(by);
+}
+
+/* ---------- render ---------- */
+function go(view, wh) { S.view = view; S.wh = wh || null; S.limit = PAGE; S.decor = ''; S.actor = ''; render(); $('main').scrollTop = 0; }
+
+function renderSide() {
+  const p = S.projects.find(x => x.id === S.pid);
+  $('projName').textContent = p?.name || '—';
+  $('meName').textContent = S.me?.name || ''; $('meRole').textContent = S.role;
+  const av = $('meAv'); av.textContent = initials(S.me?.name);
+  if (S.me?.avatar && /^https?:/.test(S.me.avatar)) { av.textContent = ''; av.style.backgroundImage = `url('${S.me.avatar}')`; }
+  const menu = $('projMenu'); menu.classList.toggle('hide', !S.menu);
+  menu.innerHTML = S.projects.map(x => `<button class="${x.id === S.pid ? 'on' : ''}" data-pid="${esc(x.id)}"><span>${esc(x.name)}</span><small>${esc(x.role)}</small></button>`).join('');
+
+  const pulled = S.props.filter(p => !p.is_missing && p.status === 'pulled');
+  const cnt = v => listFor(v).length;
+  const a = (v, ico, label, n, wh) => `<a class="${S.view === v && (S.wh || null) === (wh || null) ? 'on' : ''}" data-go="${v}"${wh ? ` data-wh="${esc(wh)}"` : ''}>${ico}<span class="whname">${esc(label)}</span>${n != null ? `<span class="n">${n}</span>` : ''}</a>`;
+  let h = a('overview', '<span class="ico">◧</span>', 'Overview')
+    + a('pull', '<span class="ico">▤</span>', 'Pull list', S.props.length ? cnt('pull') : null)
+    + a('activity', '<span class="ico">↻</span>', 'Activity')
+    + a('archive', '<span class="ico">▣</span>', 'Archive', S.props.length ? cnt('archive') : null)
+    + a('missing', '<span class="ico">⚑</span>', 'Missing', S.props.length ? cnt('missing') : null);
+  if (S.whs.length) {
+    h += '<div class="sect">Warehouses</div>';
+    for (const w of S.whs) h += a('wh', `<i class="dot" style="background:${w.color}"></i>`, w.name, pulled.filter(p => p.warehouse === w.id).length, w.id);
+  }
+  h += '<div class="sect">Project</div>' + a('team', '<span class="ico">👥</span>', 'Team', S.members.length || null) + a('settings', '<span class="ico">⚙</span>', 'Project info');
+  $('nav').innerHTML = h;
+}
+
+function topBar(title, sub, opts = {}) {
+  return `<div class="top"><div><h1>${esc(title)}</h1><div class="sub">${sub}</div></div>
+    ${opts.search !== false ? `<label class="search">⌕<input id="q" placeholder="Search props, warehouses, actors…" value="${esc(S.q)}"></label>` : '<div style="margin-left:auto"></div>'}
+    <button class="btn" data-act="add">＋ Add prop</button></div>`;
+}
+function liveSub() { const p = S.projects.find(x => x.id === S.pid); return `<span class="live${S.live ? '' : ' off'}"></span>${esc(p?.name || '')} · updated live`; }
+
+function filtersBar(L, showSort = true) {
+  const decs = [...new Set(L.map(p => p.decor).filter(Boolean))].sort();
+  const acts = [...new Set(L.map(p => p.actor_id).filter(Boolean))].map(actorById).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  const chips = [`<button class="chip ${!S.decor && !S.actor ? 'on' : ''}" data-f="all">All</button>`];
+  for (const d of decs.slice(0, 8)) chips.push(`<button class="chip ${S.decor === d ? 'on' : ''}" data-f="decor" data-v="${esc(d)}">${esc(d)}</button>`);
+  for (const a of acts.slice(0, 8)) chips.push(`<button class="chip ${S.actor === a.id ? 'on' : ''}" data-f="actor" data-v="${esc(a.id)}">${esc(a.name)}</button>`);
+  if (decs.length > 8) chips.push(`<select class="sel" id="fdecor"><option value="">Set…</option>${decs.map(d => `<option ${S.decor === d ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>`);
+  if (acts.length > 8) chips.push(`<select class="sel" id="factor"><option value="">Actor…</option>${acts.map(a => `<option value="${esc(a.id)}" ${S.actor === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>`);
+  if (showSort) chips.push(`<select class="sel" id="sort" style="margin-left:auto">${[['new', 'Newest'], ['old', 'Oldest'], ['name', 'Name A–Z'], ['wh', 'Warehouse']].map(([v, t]) => `<option value="${v}" ${S.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select>`
+    + `<button class="ab" data-act="csv" title="Download as a spreadsheet (CSV)">⤓ CSV</button>`);
+  return `<div class="filters">${chips.join('')}</div>`;
+}
+
+function rowHtml(p) {
+  const st = statusOf(p); const w = whById(p.warehouse); const a = actorById(p.actor_id);
+  const setActor = [p.decor, a?.name].filter(Boolean).map(esc).join(' · ') || '<span style="color:var(--muted)">—</span>';
+  const tag = w ? `<span class="tagw" style="background:${hexA(w.color, .14)};color:${w.color}">${esc(w.name)}</span>` : '<span style="color:var(--muted)">—</span>';
+  const badge = st === 'missing' ? '<span class="st miss">Missing</span>' : st === 'returned' ? '<span class="st ret">Returned</span>' : '<span class="st out">Pulled</span>';
+  let acts = '';
+  if (st === 'pulled') acts = `<button class="ab g" data-a="ret" data-id="${p.id}">Return</button><button class="ab r" data-a="miss" data-id="${p.id}" title="Move to Missing">⚑</button>`;
+  else if (st === 'returned') acts = `<button class="ab p" data-a="pull" data-id="${p.id}">Pull again</button>`;
+  else acts = `<button class="ab g" data-a="found" data-id="${p.id}">Found</button>`;
+  const by = p.user_id === S.user.id ? 'You' : (p.user_name || '—');
+  const when = st === 'returned' && p.returned_at ? `Returned ${whenTxt(p.returned_at)}` : whenTxt(p.taken_at);
+  return `<tr>
+    <td style="width:60px"><button class="thumb" data-img="${p.id}" style="background-image:url('${esc(img(p))}')" aria-label="Open photo"></button></td>
+    <td class="name"><b data-edit="${p.id}" title="Edit">${esc(p.name || 'Untitled')}</b>${p.note ? `<small>${esc(p.note)}</small>` : ''}</td>
+    <td>${tag}</td><td>${setActor}</td>
+    <td class="when">${esc(by)}<br><small>${esc(when)}</small></td>
+    <td>${badge}</td><td><div class="acts">${acts}<button class="ab" data-edit="${p.id}" title="Edit">✎</button></div></td></tr>`;
+}
+function tableHtml(L) {
+  if (!L.length) return `<div class="tablewrap"><div class="empty">${S.q || S.decor || S.actor ? 'Nothing matches.' : 'Nothing here yet.'}</div></div>`;
+  const shown = L.slice(0, S.limit);
+  return `<div class="tablewrap"><table><thead><tr><th></th><th>Prop</th><th>Warehouse</th><th>Set / Actor</th><th>Added by</th><th>Status</th><th></th></tr></thead>
+    <tbody>${shown.map(rowHtml).join('')}</tbody></table></div>
+    ${L.length > S.limit ? `<button class="btn2 more" data-act="more">Show more (${L.length - S.limit} left)</button>` : ''}`;
+}
+
+function events(limit = 60) {
+  const ev = [];
+  for (const p of S.props) {
+    const w = whById(p.warehouse)?.name;
+    const who = p.user_id === S.user.id ? 'You' : (p.user_name || 'Someone');
+    if (p.is_missing) ev.push({ t: p.taken_at, p, txt: `Logged missing · ${who}`, c: 'r' });
+    else ev.push({ t: p.taken_at, p, txt: `Pulled${w ? ' from ' + w : ''} · ${who}`, c: '' });
+    if (p.returned_at && p.status === 'returned') ev.push({ t: p.returned_at, p, txt: `Returned${w ? ' to ' + w : ''}`, c: 'g' });
+  }
+  return ev.filter(e => e.t).sort((a, b) => new Date(b.t) - new Date(a.t)).slice(0, limit);
+}
+function eventsHtml(ev) {
+  if (!ev.length) return '<div class="empty" style="padding:20px 0">No activity yet.</div>';
+  let h = '', last = '';
+  for (const e of ev) {
+    const d = dayLabel(e.t); if (d !== last) { h += `<div class="day">${esc(d)}</div>`; last = d; }
+    h += `<div class="ev"><button class="thumb" data-img="${e.p.id}" style="background-image:url('${esc(img(e.p))}')"></button><div class="tx"><b>${esc(e.p.name || 'Untitled')}</b><p class="${e.c}">${esc(e.txt)}</p></div><time>${hm(e.t)}</time></div>`;
+  }
+  return h;
+}
+function teamSummary() {
+  const c = r => S.members.filter(m => m.role === r).length;
+  const parts = [[c('admin'), 'admin'], [c('manager'), 'manager'], [c('member'), 'member']].filter(x => x[0]).map(([n, r]) => `${n} ${r}${n > 1 ? 's' : ''}`);
+  return `<h2 style="margin-top:24px">Team</h2><div class="team">${S.members.slice(0, 14).map((m, i) => avHtml(m.name, m.avatar, i)).join('')}</div><div class="sub">${parts.join(' · ')}</div>`;
+}
+
+function render() {
+  if (!S.pid) return;
+  renderSide();
+  const right = ['overview', 'pull', 'wh'].includes(S.view);
+  $('app').classList.toggle('noright', !right);
+  $('right').innerHTML = right ? `<h2>Activity</h2><div class="sub">Who pulled and returned what</div>${eventsHtml(events(40))}${teamSummary()}` : '';
+  const m = $('main'); const focus = document.activeElement?.id === 'q'; const caret = focus ? $('q').selectionStart : 0;
+  const all = S.props;
+  const pulled = all.filter(p => !p.is_missing && p.status === 'pulled');
+  if (S.view === 'overview') {
+    const L = applyFilters(pulled);
+    const pulledBy = id => pulled.filter(p => p.warehouse === id).length;
+    m.innerHTML = topBar(`${greet()}, ${firstName(S.me?.name)}`, liveSub())
+      + `<div class="stats">
+          <button class="stat p" data-go="pull"><b>${pulled.length}</b><span>Pulled now</span></button>
+          <button class="stat g" data-go="archive"><b>${all.filter(p => !p.is_missing && p.status === 'returned').length}</b><span>Returned</span></button>
+          <button class="stat r" data-go="missing"><b>${all.filter(p => p.is_missing).length}</b><span>Missing</span></button>
+          <button class="stat a" data-go="activity"><b>${all.length}</b><span>Total props</span></button></div>`
+      + (S.whs.length ? `<h3>Warehouses</h3><div class="whs">${S.whs.map(w => { const n = pulledBy(w.id); return `<button class="wh" data-go="wh" data-wh="${esc(w.id)}"><div class="ic" style="background:${hexA(w.color, .25)}"></div><b>${esc(w.name)}</b><span class="pill${n ? '' : ' zero'}" style="background:${w.color}">${n} pulled</span></button>`; }).join('')}</div>` : '')
+      + `<h3>Pull list</h3>${filtersBar(pulled)}${tableHtml(L)}`;
+  } else if (S.view === 'pull' || S.view === 'archive' || S.view === 'missing' || S.view === 'wh') {
+    const base = listFor(S.view); const L = applyFilters(base);
+    const w = S.view === 'wh' ? whById(S.wh) : null;
+    const title = { pull: 'Pull list', archive: 'Archive', missing: 'Missing' }[S.view] || w?.name || 'Warehouse';
+    let sub = { pull: `${base.length} props out right now`, archive: `${base.length} returned props`, missing: `${base.length} props logged as missing` }[S.view];
+    if (w) {
+      const out = base.filter(p => p.status === 'pulled').length;
+      sub = `${out} pulled · ${base.length - out} returned` + [w.location, w.contact_name, w.contact_phone].filter(Boolean).map(x => ' · ' + esc(x)).join('');
+    }
+    m.innerHTML = topBar(title, sub) + filtersBar(base) + tableHtml(L);
+  } else if (S.view === 'activity') {
+    m.innerHTML = topBar('Activity', 'Everything that happened in this project', { search: false }) + `<div class="card" style="padding:4px 18px 10px">${eventsHtml(events(S.limit * 2))}</div>`
+      + (events(100000).length > S.limit * 2 ? `<button class="btn2 more" data-act="more">Show more</button>` : '');
+  } else if (S.view === 'team') {
+    m.innerHTML = topBar('Team', `${S.members.length} people in this project`, { search: false })
+      + `<div class="tablewrap teamlist">${S.members.map((x, i) => {
+        const n = all.filter(p => p.user_id === x.id).length;
+        return `<div class="row">${avHtml(x.name, x.avatar, i)}<div class="n"><b>${esc(x.name)}${x.id === S.user.id ? ' <span style="color:var(--muted);font-weight:400">(you)</span>' : ''}</b><small>${n} props · joined ${x.joined_at ? esc(new Date(x.joined_at).toLocaleDateString()) : '—'}</small></div><span class="role ${esc(x.role)}">${esc(x.role)}</span></div>`;
+      }).join('')}</div><p style="color:var(--muted);font-size:12.5px;margin-top:12px">Roles and invites are managed in the app.</p>`;
+  } else if (S.view === 'settings') {
+    const p = S.projects.find(x => x.id === S.pid);
+    m.innerHTML = topBar('Project info', esc(p?.name || ''), { search: false })
+      + `<div class="card"><div class="kv">
+        <span>Project</span><b>${esc(p?.name)}</b>
+        <span>Invite code</span><div><code class="inv">${esc(p?.invite_code || '—')}</code> <button class="ab" data-act="copyinv">Copy</button></div>
+        <span>Your role</span><span style="color:var(--text);text-transform:capitalize">${esc(S.role)}</span>
+        <span>Created</span><span style="color:var(--text)">${p?.created_at ? esc(new Date(p.created_at).toLocaleDateString()) : '—'}</span>
+        <span>Warehouses</span><span style="color:var(--text)">${S.whs.length}</span>
+        <span>Sets / Actors</span><span style="color:var(--text)">${S.decors.length} / ${S.actors.length}</span>
+      </div></div><p style="color:var(--muted);font-size:12.5px;margin-top:12px">Share the invite code with your crew — they join from the app with “Join project”.</p>`;
+  }
+  if (focus && $('q')) { $('q').focus(); $('q').setSelectionRange(caret, caret); }
+}
+
+/* ---------- events (delegated) ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-a],[data-act],[data-f],[data-img],[data-edit],[data-pid],#projBtn');
+  if (!t) { if (S.menu && !e.target.closest('#projMenu')) { S.menu = false; renderSide(); } return; }
+  if (t.id === 'projBtn') { S.menu = !S.menu; renderSide(); return; }
+  if (t.dataset.pid) { S.menu = false; if (t.dataset.pid !== S.pid) openProject(t.dataset.pid); else renderSide(); return; }
+  if (t.dataset.go) return go(t.dataset.go, t.dataset.wh);
+  if (t.dataset.a) return A[t.dataset.a](t.dataset.id);
+  if (t.dataset.img) return lightbox(t.dataset.img);
+  if (t.dataset.edit) return editModal(t.dataset.edit);
+  if (t.dataset.f) {
+    if (t.dataset.f === 'all') { S.decor = ''; S.actor = ''; }
+    else if (t.dataset.f === 'decor') { S.decor = S.decor === t.dataset.v ? '' : t.dataset.v; }
+    else { S.actor = S.actor === t.dataset.v ? '' : t.dataset.v; }
+    S.limit = PAGE; return render();
+  }
+  const act = t.dataset.act;
+  if (act === 'more') { S.limit += PAGE; render(); }
+  else if (act === 'add') addModal();
+  else if (act === 'csv') csv();
+  else if (act === 'copyinv') { const p = S.projects.find(x => x.id === S.pid); navigator.clipboard?.writeText(p?.invite_code || '').then(() => toast('Invite code copied')); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { S.q = e.target.value; S.limit = PAGE; render(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'sort') { S.sort = e.target.value; render(); }
+  if (e.target.id === 'fdecor') { S.decor = e.target.value; render(); }
+  if (e.target.id === 'factor') { S.actor = e.target.value; render(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOv(); if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA' && $('q')) { e.preventDefault(); $('q').focus(); } });
+
+/* ---------- overlays ---------- */
+function closeOv() { $('overlay').innerHTML = ''; }
+function lightbox(id) {
+  const p = S.props.find(x => x.id === id); if (!p) return;
+  const w = whById(p.warehouse);
+  $('overlay').innerHTML = `<div class="lb" id="lb"><img src="${esc(p.photo_url || p.thumb_url)}" alt=""><div><b style="color:#fff">${esc(p.name || '')}</b>${w ? ' · ' + esc(w.name) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>`;
+  $('lb').onclick = closeOv;
+}
+function opts(list, val, emptyLabel, key = 'id') {
+  return `<option value="">${emptyLabel}</option>` + list.map(x => `<option value="${esc(x[key])}" ${x[key] === val ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
+}
+function editModal(id) {
+  const p = S.props.find(x => x.id === id); if (!p) return;
+  const canDel = p.user_id === S.user.id || canManage();
+  $('overlay').innerHTML = `<div class="ov" id="ov"><form class="modal" id="ef">
+    <h2>Edit prop</h2>
+    <div style="display:flex;gap:14px;margin-bottom:14px"><div class="thumb" style="width:84px;height:84px;background-image:url('${esc(img(p))}')"></div>
+      <div style="flex:1"><label class="field"><span>Name</span><input class="inp" name="name" value="${esc(p.name || '')}" maxlength="120"></label></div></div>
+    <label class="field"><span>Note</span><textarea class="inp" name="note" rows="2" maxlength="500">${esc(p.note || '')}</textarea></label>
+    <div class="row2">
+      <label class="field"><span>Warehouse</span><select class="inp" name="warehouse">${opts(S.whs, p.warehouse, '— none —')}</select></label>
+      <label class="field"><span>Set</span><select class="inp" name="decor">${opts(S.decors, p.decor, '— none —', 'name')}</select></label>
+    </div>
+    <label class="field"><span>Actor</span><select class="inp" name="actor_id">${opts(S.actors, p.actor_id, '— none —')}</select></label>
+    <div class="foot">${canDel ? '<button type="button" class="ab r" id="del" style="margin-right:auto">Delete</button>' : ''}<button type="button" class="btn2" id="cx">Cancel</button><button class="btn">Save</button></div>
+  </form></div>`;
+  $('ov').onclick = e => { if (e.target.id === 'ov') closeOv(); };
+  $('cx').onclick = closeOv;
+  if ($('del')) $('del').onclick = async () => {
+    if (!confirm('Delete this prop for everyone? This cannot be undone.')) return;
+    const { error } = await sb.from('props').delete().eq('id', id);
+    if (error) return toast('Could not delete: ' + error.message, true);
+    S.props = S.props.filter(x => x.id !== id); closeOv(); render(); toast('Deleted');
+  };
+  $('ef').onsubmit = e => {
+    e.preventDefault(); const f = new FormData(e.target);
+    const patch = { name: f.get('name').trim() || p.name, note: f.get('note').trim() || null, warehouse: f.get('warehouse') || null, decor: f.get('decor') || null, actor_id: f.get('actor_id') || null };
+    closeOv(); upd(id, patch, 'Saved');
+  };
+}
+
+/* ---------- add prop (upload) ---------- */
+function resizeJpeg(file, maxW, q) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => {
+      const s = Math.min(1, maxW / im.naturalWidth);
+      const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => b ? res(b) : rej(new Error('Could not read image')), 'image/jpeg', q);
+    };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Not an image')); };
+    im.src = u;
+  });
+}
+function addModal() {
+  let files = [];
+  const defWh = S.view === 'wh' ? S.wh : '';
+  $('overlay').innerHTML = `<div class="ov" id="ov"><form class="modal" id="af">
+    <h2>Add props</h2>
+    <label class="drop" id="drop"><input type="file" id="files" accept="image/*" multiple hidden>
+      <div><b style="color:var(--text)">Drop photos here</b> or click to choose</div><div style="font-size:12px;margin-top:4px">One photo = one prop</div>
+      <div class="prev" id="prev"></div></label>
+    <div class="row2">
+      <label class="field"><span>Warehouse</span><select class="inp" name="warehouse">${opts(S.whs, defWh, '— none —')}</select></label>
+      <label class="field"><span>Set</span><select class="inp" name="decor">${opts(S.decors, '', '— none —', 'name')}</select></label>
+    </div>
+    <div class="row2">
+      <label class="field"><span>Actor</span><select class="inp" name="actor_id">${opts(S.actors, '', '— none —')}</select></label>
+      <label class="field"><span>Note</span><input class="inp" name="note" maxlength="500"></label>
+    </div>
+    <label class="check"><input type="checkbox" name="ai" ${store.get('pt_web_ai') === '0' ? '' : 'checked'}> <span>Name props automatically with AI (the photo is sent to our AI provider to suggest a name)</span></label>
+    <div class="msg" id="addMsg"></div>
+    <div class="foot"><button type="button" class="btn2" id="cx">Cancel</button><button class="btn" id="go" disabled>Add</button></div>
+  </form></div>`;
+  const setFiles = fl => {
+    files = [...fl].filter(f => f.type.startsWith('image/')).slice(0, 30);
+    $('prev').innerHTML = files.map(f => `<div style="background-image:url('${URL.createObjectURL(f)}')"></div>`).join('');
+    $('go').disabled = !files.length; $('go').textContent = files.length > 1 ? `Add ${files.length} props` : 'Add';
+  };
+  $('ov').onclick = e => { if (e.target.id === 'ov') closeOv(); };
+  $('cx').onclick = closeOv;
+  $('files').onchange = e => setFiles(e.target.files);
+  const d = $('drop');
+  d.ondragover = e => { e.preventDefault(); d.classList.add('on'); };
+  d.ondragleave = () => d.classList.remove('on');
+  d.ondrop = e => { e.preventDefault(); d.classList.remove('on'); setFiles(e.dataTransfer.files); };
+  $('af').onsubmit = async e => {
+    e.preventDefault(); if (!files.length) return;
+    const f = new FormData(e.target); const ai = !!f.get('ai'); store.set('pt_web_ai', ai ? '1' : '0');
+    const btn = $('go'); btn.disabled = true; const msg = $('addMsg');
+    const pid = S.pid; const created = [];
+    let n = S.props.length;
+    for (let i = 0; i < files.length; i++) {
+      msg.className = 'msg'; msg.textContent = `Uploading ${i + 1} of ${files.length}…`;
+      try {
+        const [full, thumb] = await Promise.all([resizeJpeg(files[i], 2000, .85), resizeJpeg(files[i], 600, .75)]);
+        const fname = `web_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.jpg`;
+        const path = `${pid}/${fname}`, tpath = `thumbs/${pid}/${fname}`;
+        const up = await sb.storage.from('photos').upload(path, full, { contentType: 'image/jpeg' });
+        if (up.error) throw up.error;
+        const ut = await sb.storage.from('photos').upload(tpath, thumb, { contentType: 'image/jpeg' });
+        const photo_url = sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
+        const thumb_url = ut.error ? null : sb.storage.from('photos').getPublicUrl(tpath).data.publicUrl;
+        const row = {
+          project_id: pid, project: S.projects.find(x => x.id === pid)?.name || null,
+          warehouse: f.get('warehouse') || null, decor: f.get('decor') || null, actor_id: f.get('actor_id') || null,
+          note: f.get('note').trim() || null, user_id: S.user.id, user_name: S.me?.name || S.user.email,
+          status: 'pulled', is_missing: false, taken_at: new Date().toISOString(), name: `img ${++n}`, photo_url, thumb_url,
+        };
+        const { data, error } = await sb.from('props').insert(row).select().single();
+        if (error) throw error;
+        created.push(data);
+        if (!S.props.some(p => p.id === data.id)) S.props.unshift(data);
+      } catch (err) { msg.className = 'msg err'; msg.textContent = `Photo ${i + 1}: ${err.message || err}`; btn.disabled = false; render(); return; }
+    }
+    closeOv(); render(); toast(created.length > 1 ? `${created.length} props added` : 'Prop added');
+    if (ai) autoName(created);
+  };
+}
+async function autoName(rows) {
+  for (const r of rows) {
+    try {
+      const { data, error } = await sb.functions.invoke('name-prop', { body: { image_url: r.photo_url, lang: 'en' } });
+      const name = (data?.name || '').trim(); if (error || !name) continue;
+      const { error: ue } = await sb.from('props').update({ name }).eq('id', r.id).eq('name', r.name);
+      if (!ue) { const p = S.props.find(x => x.id === r.id); if (p && AUTO_NAME_RE.test(p.name || '')) { p.name = name; render(); } }
+    } catch {}
+  }
+}
+
+/* ---------- CSV ---------- */
+function csv() {
+  const L = S.view === 'overview' ? applyFilters(listFor('pull')) : S.view === 'activity' ? S.props : applyFilters(listFor(S.view));
+  const head = ['Name', 'Note', 'Status', 'Warehouse', 'Set', 'Actor', 'Added by', 'Pulled', 'Returned', 'Photo'];
+  const cell = v => { const s = String(v ?? ''); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const fmt = d => d ? new Date(d).toLocaleString() : '';
+  const lines = [head, ...L.map(p => [p.name, p.note, statusOf(p), whById(p.warehouse)?.name, p.decor, actorById(p.actor_id)?.name, p.user_name, fmt(p.taken_at), fmt(p.returned_at), p.photo_url])].map(r => r.map(cell).join(','));
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const pn = (S.projects.find(x => x.id === S.pid)?.name || 'props').replace(/[^\w\- ]+/g, '').trim() || 'props';
+  a.download = `${pn} - ${S.view === 'overview' ? 'pull list' : S.view}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+start();
+</script>
+</body>
+</html>
