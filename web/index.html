@@ -309,7 +309,7 @@ footer.foot .stores a:hover{color:var(--text)}
 'use strict';
 const SUPABASE_URL = 'https://hxtawtebartukulvavvj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_6RWpVGy6w4aAhGs4TQMjGw_36NCPFDm'; // public key; the data is protected by database rules
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' } });
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, detectSessionInUrl: true, flowType: 'implicit' } });
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
