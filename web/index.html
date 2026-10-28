@@ -143,7 +143,7 @@ main{flex:1;min-width:0;padding:28px 36px 28px;display:flex;flex-direction:colum
 .pc{display:flex;gap:16px;padding:12px;border-radius:20px;background:var(--card);border:1px solid var(--line);cursor:pointer;text-align:left;min-width:0}
 .pc:hover{border-color:rgba(167,139,250,.35)}
 .pc.sel{border-color:rgba(167,139,250,.7);box-shadow:0 0 0 1px rgba(167,139,250,.5)}
-.pc img{width:104px;height:104px;border-radius:14px;object-fit:cover;background:#222;flex-shrink:0}
+.pc img{width:104px;height:104px;object-fit:cover;background:#222;display:block}
 .pc .bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .pc .t{display:flex;align-items:baseline;gap:10px}
 .pc .t b{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -154,6 +154,22 @@ main{flex:1;min-width:0;padding:28px 36px 28px;display:flex;flex-direction:colum
 .pc .note{font-size:12.5px;color:#F5E3B0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .more{align-self:center}
 
+/* marks over photos */
+.pimg{position:relative;flex-shrink:0;border-radius:14px;overflow:hidden}
+.pimg .mk,.bigwrap .mk,.bimg .mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mkb{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid rgba(10,10,18,.6)}
+.bimg{position:relative;border-radius:10px;overflow:hidden}
+.bigwrap{position:relative;border-radius:20px;overflow:hidden;background:#222}
+.markov{position:fixed;inset:0;background:#05050A;z-index:55;display:flex;flex-direction:column}
+.markov .mt{display:flex;align-items:center;gap:10px;padding:14px 18px}
+.markov .mt b{flex:1;text-align:center;font-size:15px}
+.markov .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 16px}
+.markov .surf{position:relative;touch-action:none;outline:2px solid rgba(248,113,113,.7)}
+.markov .surf img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.markov canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.markov .mb{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;flex-wrap:wrap}
+.markov .cdot{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.markov .cdot.on{border-color:#fff}
 /* board */
 .boardwrap{overflow-x:auto;padding-bottom:8px}
 .board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:14px}
@@ -164,7 +180,7 @@ main{flex:1;min-width:0;padding:28px 36px 28px;display:flex;flex-direction:colum
 .bcol .bh .pill{margin-left:auto;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;color:#0A0A12}
 .bc{display:flex;flex-direction:column;gap:8px;padding:8px 8px 10px;border-radius:14px;background:var(--card);border:1px solid var(--line);cursor:pointer;text-align:left}
 .bc:hover{border-color:rgba(167,139,250,.35)}
-.bc img{width:100%;aspect-ratio:16/10;border-radius:10px;object-fit:cover;background:#222}
+.bc img{width:100%;aspect-ratio:16/10;object-fit:cover;background:#222;display:block}
 .bc .bb{display:flex;align-items:center;gap:8px;padding:0 4px}
 .bc .bb div{flex:1;min-width:0}.bc .bb b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bc .bb span{font-size:12px;color:var(--sub)}
@@ -197,7 +213,7 @@ footer.foot .stores a:hover{color:var(--text)}
 .drawer .dt{display:flex;align-items:center;gap:8px}
 .drawer .dt span{color:var(--muted);font-size:13px}
 .drawer .x{margin-left:auto}
-.drawer .big{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:20px;background:#222;cursor:zoom-in}
+.drawer .big{display:block;width:100%;height:auto;cursor:zoom-in}
 .drawer h2{margin:0;font-size:24px;letter-spacing:-.4px;color:var(--title)}
 .drawer .chips{display:flex;gap:6px;flex-wrap:wrap}
 .drawer .acts{display:flex;gap:8px;flex-wrap:wrap}
@@ -407,6 +423,18 @@ const img = p => p.thumb_url || p.photo_url || '';
 const who = p => p.user_id === S.user?.id ? 'You' : (p.user_name || 'Someone');
 const proj = () => S.projects.find(x => x.id === S.pid);
 
+/* ---------- marks (lines over a photo) ---------- */
+const MARK_COLORS = ['#F87171', '#6EE7B7', '#FBBF24'];
+const hasMarks = m => !!(m && Array.isArray(m.s) && m.s.length);
+function marksSvg(m, mode) {
+  if (!hasMarks(m)) return '';
+  const a = m.a > 0 ? m.a : 4 / 3, W = 1000, H = Math.round(1000 / a);
+  const sw = W * 0.012 * (mode === 'cover' ? 1.6 : 1);
+  const paths = m.s.map(st => { const pts = (st.p || []).map(q => `${(q[0] * W).toFixed(1)},${(q[1] * H).toFixed(1)}`); if (pts.length === 1) pts.push(pts[0]); return `<polyline points="${pts.join(' ')}" fill="none" stroke="${/^#[0-9a-f]{6}$/i.test(st.c || '') ? st.c : '#F87171'}" stroke-width="${sw.toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`; }).join('');
+  return `<svg class="mk" viewBox="0 0 ${W} ${H}" preserveAspectRatio="${mode === 'cover' ? 'xMidYMid slice' : 'none'}" aria-hidden="true">${paths}</svg>`;
+}
+const markBadge = m => hasMarks(m) ? `<span class="mkb" title="Partly returned">${I('x', 11, 3)}</span>` : '';
+
 /* ---------- screens ---------- */
 function show(id) { for (const s of ['boot', 'login', 'recover', 'noproj', 'app']) $(s).classList.toggle('hide', s !== id); }
 
@@ -472,7 +500,7 @@ async function fetchAllProps(pid) {
   const out = []; const step = 1000;
   for (let from = 0; from < 20000; from += step) {
     const { data, error } = await sb.from('props')
-      .select('id,warehouse,user_name,user_id,photo_url,thumb_url,status,taken_at,returned_at,note,is_missing,name,decor,actor_id')
+      .select('id,warehouse,user_name,user_id,photo_url,thumb_url,status,taken_at,returned_at,note,is_missing,name,decor,actor_id,marks')
       .eq('project_id', pid).order('taken_at', { ascending: false }).range(from, from + step - 1);
     if (error) throw error;
     out.push(...data); if (data.length < step) break;
@@ -624,7 +652,7 @@ function cardHtml(p) {
   const w = whById(p.warehouse); const a = actorById(p.actor_id); const st = statusOf(p);
   const when = st === 'returned' && p.returned_at ? `Returned ${whenTxt(p.returned_at)}` : whenTxt(p.taken_at);
   return `<article class="pc${S.open === p.id ? ' sel' : ''}" data-open="${p.id}">
-    <img src="${esc(img(p))}" alt="" loading="lazy">
+    <div class="pimg"><img src="${esc(img(p))}" alt="" loading="lazy">${marksSvg(p.marks, 'cover')}${markBadge(p.marks)}</div>
     <div class="bd">
       <div class="t"><b>${esc(p.name || 'Untitled')}</b><time>${esc(when)}</time></div>
       <div class="w">${esc(who(p))}${w ? ` · <span style="color:${w.color}">${esc(w.name)}</span>` : ''}${st === 'missing' ? ' · <span style="color:var(--pink)">Missing</span>' : ''}</div>
@@ -645,7 +673,7 @@ function boardHtml(L) {
   return `<div class="boardwrap"><div class="board">${cols.map(({ w, items }) => `
     <section class="bcol" style="background:${tint(w.color, .07)};border-color:${tint(w.color, .22)}">
       <div class="bh"><span class="wi" style="background:${tint(w.color, .18)};color:${w.color}">${I(w.icon, 16)}</span><b>${esc(w.name)}</b><span class="pill" style="background:${w.color}">${items.length}</span></div>
-      ${items.slice(0, 30).map(p => `<article class="bc" data-open="${p.id}"><img src="${esc(img(p))}" alt="" loading="lazy"><div class="bb"><div><b>${esc(p.name || 'Untitled')}</b><span>${esc([p.decor, who(p), whenTxt(p.taken_at)].filter(Boolean).join(' · '))}</span></div><button class="ab g ico" data-a="ret" data-id="${p.id}" aria-label="Return">${I('ret', 15, 2.4)}</button></div></article>`).join('')}
+      ${items.slice(0, 30).map(p => `<article class="bc" data-open="${p.id}"><div class="bimg"><img src="${esc(img(p))}" alt="" loading="lazy">${marksSvg(p.marks, 'cover')}${markBadge(p.marks)}</div><div class="bb"><div><b>${esc(p.name || 'Untitled')}</b><span>${esc([p.decor, who(p), whenTxt(p.taken_at)].filter(Boolean).join(' · '))}</span></div><button class="ab g ico" data-a="ret" data-id="${p.id}" aria-label="Return">${I('ret', 15, 2.4)}</button></div></article>`).join('')}
       ${items.length > 30 ? `<div class="bempty">+ ${items.length - 30} more</div>` : ''}${!items.length ? '<div class="bempty">Nothing pulled</div>' : ''}
     </section>`).join('')}</div></div>`;
 }
@@ -684,12 +712,12 @@ function renderDrawer() {
   if (p.returned_at && st === 'returned') hist.unshift(`<div><i style="background:var(--green)"></i><span><b>${esc(fullWhen(p.returned_at))}</b> — returned${w ? ' to ' + esc(w.name) : ''}</span></div>`);
   $('drawer').innerHTML = `<aside class="drawer" aria-label="Prop details">
     <div class="dt"><span>${esc(proj()?.name || '')}</span><button class="ab ico x" data-act="close" aria-label="Close">${I('x', 16)}</button></div>
-    <img class="big" src="${esc(p.photo_url || p.thumb_url)}" alt="${esc(p.name || '')}" data-zoom="${p.id}">
+    <div class="bigwrap"><img class="big" src="${esc(p.photo_url || p.thumb_url)}" alt="${esc(p.name || '')}" data-zoom="${p.id}">${marksSvg(p.marks, 'fill')}</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <h2>${esc(p.name || 'Untitled')}</h2>
       <div class="chips">${badge}${w ? `<span class="tag" style="background:${tint(w.color, .13)};color:${w.color}">${I(w.icon, 12)}${esc(w.name)}</span>` : ''}${p.decor ? `<span class="tag set">${I('film', 12)}${esc(p.decor)}</span>` : ''}${a ? `<span class="tag act">${I('user', 12)}${esc(a.name)}</span>` : ''}</div>
     </div>
-    <div class="acts">${actsFor(p, true)}<button class="ab" data-edit="${p.id}">${I('edit', 15)}Edit</button></div>
+    <div class="acts">${actsFor(p, true)}${!p.is_missing ? `<button class="ab${hasMarks(p.marks) ? ' r' : ''}" data-act="mark" data-id="${p.id}" title="Cross out what's already back">${I('edit', 15)}${hasMarks(p.marks) ? 'Edit marks' : 'Cross out'}</button>` : ''}<button class="ab" data-edit="${p.id}">Edit</button></div>
     ${p.note ? `<div class="notebox">${esc(p.note)}</div>` : ''}
     <div class="facts">
       <div><span>Pulled by</span><b>${esc(p.user_id === S.user.id ? 'You' : (p.user_name || '—'))}</b></div>
@@ -790,6 +818,7 @@ document.addEventListener('click', e => {
   else if (act === 'csv') csv(applyFilters(listFor(S.view)), S.view === 'wh' ? whById(S.wh)?.name : S.view);
   else if (act === 'csvall') csv(S.props, 'all props');
   else if (act === 'close') { S.open = null; render(); }
+  else if (act === 'mark') markEditor(t.dataset.id);
   else if (act === 'projmenu') { S.projMenu = !S.projMenu; render(); }
   else if (act === 'usermenu') { S.userMenu = !S.userMenu; renderRail(); }
   else if (act === 'logout') logout();
@@ -801,7 +830,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'factor') { S.actor = e.target.value; render(); }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('overlay').innerHTML) closeOv(); else if (S.open) { S.open = null; render(); } }
+  if (e.key === 'Escape') { if ($('overlay').innerHTML) { window.dispatchEvent(new Event('resize')); closeOv(); } else if (S.open) { S.open = null; render(); } }
   const tag = document.activeElement?.tagName;
   if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA' && $('q')) { e.preventDefault(); $('q').focus(); }
 });
@@ -838,6 +867,41 @@ function editModal(id) {
     e.preventDefault(); const f = new FormData(e.target);
     closeOv(); upd(id, { name: f.get('name').trim() || p.name, note: f.get('note').trim() || null, warehouse: f.get('warehouse') || null, decor: f.get('decor') || null, actor_id: f.get('actor_id') || null }, 'Saved');
   };
+}
+
+/* ---------- cross out on the photo ---------- */
+function markEditor(id) {
+  const p = S.props.find(x => x.id === id); if (!p) return;
+  let strokes = (p.marks?.s || []).map(s => ({ c: s.c, p: s.p.slice() })), cur = null, color = MARK_COLORS[0], aspect = p.marks?.a || 0;
+  $('overlay').innerHTML = `<div class="markov" id="mk">
+    <div class="mt"><button class="btn2" id="mkx">Cancel</button><b>Cross out what's back</b><button class="btn" id="mkok" style="height:40px">Done</button></div>
+    <div class="stage" id="stage"><div class="surf" id="surf"><img id="mkimg" src="${esc(p.photo_url || p.thumb_url)}" alt=""><canvas id="mkc"></canvas></div></div>
+    <div class="mb">${MARK_COLORS.map((c, i) => `<button class="cdot${i ? '' : ' on'}" style="background:${c}" data-c="${c}" aria-label="Colour"></button>`).join('')}
+      <span style="width:10px"></span><button class="btn2" id="mku">${I('ret', 15)}Undo</button><button class="btn2" id="mkcl" style="color:var(--pink)">${I('trash', 15)}Clear</button></div></div>`;
+  const surf = $('surf'), cv = $('mkc'), ctx = cv.getContext('2d'), im = $('mkimg'), stage = $('stage');
+  const layout = () => {
+    if (!im.naturalWidth) return;
+    if (!aspect) aspect = im.naturalWidth / im.naturalHeight;
+    const r = stage.getBoundingClientRect(); const mw = r.width - 32, mh = r.height;
+    let w = mw, h = w / aspect; if (h > mh) { h = mh; w = h * aspect; }
+    surf.style.width = w + 'px'; surf.style.height = h + 'px';
+    const d = devicePixelRatio || 1; cv.width = w * d; cv.height = h * d; draw();
+  };
+  const draw = () => {
+    const w = cv.width, h = cv.height; ctx.clearRect(0, 0, w, h); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const st of cur ? [...strokes, cur] : strokes) { ctx.strokeStyle = st.c; ctx.lineWidth = Math.max(3, w * 0.012); ctx.beginPath(); st.p.forEach((q, i) => i ? ctx.lineTo(q[0] * w, q[1] * h) : ctx.moveTo(q[0] * w, q[1] * h)); if (st.p.length === 1) ctx.lineTo(st.p[0][0] * w + .1, st.p[0][1] * h); ctx.stroke(); }
+  };
+  const pt = e => { const r = cv.getBoundingClientRect(); const cl = v => Math.max(0, Math.min(1, v)); return [Math.round(cl((e.clientX - r.left) / r.width) * 1e4) / 1e4, Math.round(cl((e.clientY - r.top) / r.height) * 1e4) / 1e4]; };
+  cv.onpointerdown = e => { cur = { c: color, p: [pt(e)] }; cv.setPointerCapture(e.pointerId); draw(); };
+  cv.onpointermove = e => { if (!cur) return; const q = pt(e), l = cur.p[cur.p.length - 1]; if (Math.hypot(q[0] - l[0], q[1] - l[1]) < 0.004 || cur.p.length > 400) return; cur.p.push(q); draw(); };
+  cv.onpointerup = cv.onpointercancel = () => { if (cur) { strokes.push(cur); cur = null; draw(); } };
+  im.onload = layout; if (im.complete) layout(); window.addEventListener('resize', layout);
+  const close = () => { window.removeEventListener('resize', layout); closeOv(); };
+  document.querySelectorAll('.cdot').forEach(b => b.onclick = () => { color = b.dataset.c; document.querySelectorAll('.cdot').forEach(x => x.classList.toggle('on', x === b)); });
+  $('mku').onclick = () => { strokes.pop(); draw(); };
+  $('mkcl').onclick = () => { strokes = []; draw(); };
+  $('mkx').onclick = close;
+  $('mkok').onclick = () => { const m = strokes.length ? { a: Math.round((aspect || 4 / 3) * 1e4) / 1e4, s: strokes } : null; close(); upd(id, { marks: m }, m ? 'Marked — the whole crew sees it' : 'Marks removed'); };
 }
 
 /* ---------- add props (upload) ---------- */
