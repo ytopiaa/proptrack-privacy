@@ -118,6 +118,8 @@
     .list div{display:flex; justify-content:space-between; gap:10px; padding:8px 10px; background:rgba(255,255,255,.03); border-radius:10px}
     .list div span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
     .mini{height:70px}
+    .more{display:flex; gap:8px; justify-content:center; margin-top:12px}
+    .more:empty{display:none}
 
     /* project photos */
     .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
@@ -240,12 +242,18 @@
       <span class="muted" id="userCount"></span>
     </div>
     <div class="tbl"><table id="usersTbl"></table></div>
+    <div class="more" id="userMore"></div>
   </div>
 
   <div class="card">
     <h2>Projects</h2>
-    <div class="hint">Most recently active first · tap a project for warehouses and members</div>
+    <div class="hint">Most recently active first · tap a project for warehouses, members and photos</div>
+    <div class="tools">
+      <input class="field" id="projSearch" placeholder="Search project…">
+      <span class="muted" id="projCount"></span>
+    </div>
     <div class="tbl"><table id="projTbl"></table></div>
+    <div class="more" id="projMore"></div>
   </div>
 </div>
 
@@ -368,7 +376,8 @@ function renderUsers(){
   rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey];
     if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
     return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
-  $('userCount').textContent = `${rows.length} of ${(data.users || []).length}`;
+  const total = rows.length; rows = rows.slice(0, uShow);
+  $('userCount').textContent = q ? `${total} found` : `${fmt((data.users || []).length)} people`;
   const head = '<thead><tr>' + USER_COLS.map(([k, l, num]) => `<th data-k="${k}" class="${num ? 'num' : ''}">${l}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead>';
   const body = '<tbody>' + rows.map(u => {
     const live = u.last_seen && (Date.now() - new Date(u.last_seen)) < 86400000;
@@ -382,13 +391,28 @@ function renderUsers(){
   $('usersTbl').querySelectorAll('th').forEach(th => th.onclick = () => {
     const k = th.dataset.k; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'name' || k === 'platform') ? 1 : -1; } renderUsers(); });
   $('usersTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openUser(tr.dataset.id));
+  moreButtons('userMore', rows.length, total, n => { uShow = n; renderUsers(); });
+}
+
+// Long lists show PAGE rows at a time, with "Show more" / "Show all"
+const PAGE = 15;
+let uShow = PAGE, pShow = PAGE;
+function moreButtons(id, shown, total, set){
+  const el = $(id);
+  if (shown >= total) { el.innerHTML = total > PAGE ? '<button class="btn ghost" data-a="less">Show less</button>' : ''; }
+  else el.innerHTML = `<button class="btn ghost" data-a="more">Show ${Math.min(25, total - shown)} more</button><button class="btn ghost" data-a="all">Show all ${fmt(total)}</button>`;
+  el.querySelectorAll('button').forEach(b => b.onclick = () => set(b.dataset.a === 'more' ? shown + 25 : b.dataset.a === 'all' ? total : PAGE));
 }
 
 function renderProjects(){
-  const rows = data.projects || [];
+  const q = $('projSearch').value.trim().toLowerCase();
+  const all = (data.projects || []).filter(p => !q || (p.name || '').toLowerCase().includes(q));
+  const rows = all.slice(0, pShow);
+  $('projCount').textContent = q ? `${all.length} found` : `${fmt((data.projects || []).length)} projects`;
   $('projTbl').innerHTML = '<thead><tr><th>Project</th><th class="num">Members</th><th class="num">Props</th><th class="num">Out now</th><th>Last activity</th></tr></thead><tbody>'
     + rows.map(p => `<tr data-pid="${esc(p.id)}"><td>${esc(p.name)}</td><td class="num">${p.members}</td><td class="num">${fmt(p.props)}</td><td class="num">${fmt(p.out_now)}</td><td class="muted">${ago(p.last_activity)}</td></tr>`).join('') + '</tbody>';
   $('projTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openProject(tr.dataset.pid));
+  moreButtons('projMore', rows.length, all.length, n => { pShow = n; renderProjects(); });
 }
 
 async function openProject(pid){
@@ -576,7 +600,8 @@ $('loginForm').onsubmit = async e => {
 };
 $('logout').onclick = async () => { stopLive(); await sb.auth.signOut(); showLogin(); };
 $('refresh').onclick = () => { lastLoad = Date.now(); load(); loadLive(); };
-$('userSearch').oninput = renderUsers;
+$('userSearch').oninput = () => { uShow = PAGE; renderUsers(); };
+$('projSearch').oninput = () => { pShow = PAGE; renderProjects(); };
 $('period').querySelectorAll('button').forEach(b => {
   b.classList.toggle('on', +b.dataset.d === days);
   b.onclick = () => { days = +b.dataset.d; try { localStorage.setItem('pt_stats_days', days); } catch(e) {}
