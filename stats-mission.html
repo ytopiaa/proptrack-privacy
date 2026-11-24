@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0A0A12">
+  <title>PropsTrack Stats · Mission Control</title>
+  <link rel="icon" href="og-icon.png">
+  <link rel="apple-touch-icon" href="og-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    :root{
+      --bg:#0A0A12; --card:#14142B; --card2:#101021; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.05);
+      --text:#EDEDF0; --sub:#A6A6BF; --muted:rgba(255,255,255,.42);
+      --accent:#A78BFA; --accent2:#7C5CFF; --pink:#F472B6; --green:#6EE7B7;
+      --s-ios:#8B6CF6; --s-android:#22A078; --s-other:#5B5B78; --bar:#8B6CF6; --bar-hi:#A78BFA;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.5;
+      background-image:radial-gradient(700px 420px at 10% -10%, rgba(124,92,255,.22), transparent 70%), radial-gradient(600px 360px at 100% 0%, rgba(244,114,182,.10), transparent 70%);
+      background-repeat:no-repeat}
+    button,input{font:inherit}
+    .wrap{max-width:1120px; margin:0 auto; padding:24px 16px 64px}
+    .hidden{display:none !important}
+
+    /* login */
+    .login{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px}
+    .login .box{width:100%; max-width:380px; background:var(--card); border:1px solid var(--line); border-radius:22px; padding:28px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    .login img{width:64px; height:64px; border-radius:16px; box-shadow:0 10px 30px rgba(124,92,255,.35)}
+    .login h1{margin:14px 0 4px; font-size:22px}
+    .login p{margin:0 0 20px; color:var(--sub); font-size:14px}
+    .field{width:100%; margin:0 0 10px; padding:13px 14px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--text); outline:none}
+    .field:focus{border-color:rgba(167,139,250,.6); box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:12px; border:0; cursor:pointer; color:#fff; font-weight:700;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 8px 24px rgba(124,92,255,.3)}
+    .btn.full{width:100%; margin-top:6px}
+    .btn:disabled{opacity:.6; cursor:default}
+    .ghost{background:rgba(255,255,255,.05); border:1px solid var(--line); box-shadow:none; color:var(--text); font-weight:600; padding:8px 12px; border-radius:10px}
+    .err{color:var(--pink); font-size:13px; min-height:18px; margin-top:10px}
+
+    /* header */
+    header{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:20px}
+    header img{width:44px; height:44px; border-radius:12px}
+    header .t{flex:1; min-width:160px}
+    header .t b{display:block; font-size:20px; letter-spacing:-.3px}
+    header .t span{color:var(--muted); font-size:13px}
+    .seg{display:inline-flex; background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:12px; padding:3px}
+    .seg button{border:0; background:none; color:var(--sub); padding:6px 12px; border-radius:9px; cursor:pointer; font-weight:600; font-size:14px}
+    .seg button.on{background:rgba(167,139,250,.18); color:var(--text)}
+
+    /* tiles */
+    .tiles{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:16px}
+    .tile{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:16px; padding:14px 16px}
+    .tile .k{color:var(--sub); font-size:12.5px; font-weight:600}
+    .tile .v{font-size:28px; font-weight:750; letter-spacing:-.5px; margin-top:2px; font-variant-numeric:tabular-nums}
+    .tile .s{color:var(--muted); font-size:12px}
+    .tile.hero{background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(20,20,43,.6)); border-color:rgba(167,139,250,.3)}
+
+    .grid{display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px}
+    .card{background:var(--card2); border:1px solid var(--line); border-radius:18px; padding:18px; min-width:0}
+    .card h2{margin:0 0 2px; font-size:16px; letter-spacing:-.2px}
+    .card .hint{color:var(--muted); font-size:12.5px; margin-bottom:12px}
+
+    /* bar chart */
+    .chart{position:relative; height:180px; display:flex; align-items:flex-end; gap:2px; padding-top:8px; border-bottom:1px solid var(--line)}
+    .chart .col{flex:1; height:100%; display:flex; align-items:flex-end; cursor:default; position:relative}
+    .chart .col .b{width:100%; background:var(--bar); border-radius:4px 4px 0 0; min-height:0}
+    .chart .col:hover .b{background:var(--bar-hi)}
+    .chart .col.zero .b{background:transparent}
+    .axis{display:flex; justify-content:space-between; color:var(--muted); font-size:11.5px; margin-top:6px}
+    .gridline{position:absolute; left:0; right:0; border-top:1px dashed var(--line2); pointer-events:none}
+    .gridline span{position:absolute; right:0; top:-16px; color:var(--muted); font-size:11px}
+    .tip{position:fixed; z-index:50; pointer-events:none; background:#1C1C38; border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:12.5px; box-shadow:0 10px 30px rgba(0,0,0,.45); white-space:nowrap}
+    .tip b{display:block; font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px}
+
+    /* platform bar */
+    .stack{display:flex; height:14px; border-radius:7px; overflow:hidden; gap:2px; margin:6px 0 14px}
+    .stack div{height:100%}
+    .legend{display:flex; flex-direction:column; gap:10px}
+    .legend .row{display:flex; align-items:center; gap:10px}
+    .dot{width:10px; height:10px; border-radius:3px; flex:none}
+    .legend .n{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700}
+    .legend .sub{color:var(--muted); font-size:12px}
+
+    /* horizontal bars */
+    .hbars{display:flex; flex-direction:column; gap:10px}
+    .hb .top{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:4px}
+    .hb .top span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
+    .hb .track{height:8px; border-radius:4px; background:rgba(255,255,255,.05)}
+    .hb .fill{height:100%; border-radius:4px; background:var(--bar)}
+    .empty{color:var(--sub); font-size:14px; background:rgba(167,139,250,.07); border:1px dashed rgba(167,139,250,.3); border-radius:12px; padding:14px}
+
+    /* tables */
+    .tools{display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap}
+    .tools .field{margin:0; max-width:260px; padding:9px 12px}
+    .tbl{overflow-x:auto; -webkit-overflow-scrolling:touch}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th{text-align:left; color:var(--muted); font-weight:600; font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; user-select:none}
+    th.num,td.num{text-align:right; font-variant-numeric:tabular-nums}
+    td{padding:10px; border-bottom:1px solid var(--line2); white-space:nowrap}
+    tbody tr{cursor:pointer}
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+    .pf{display:inline-flex; align-items:center; gap:6px; color:var(--sub); font-size:13px}
+    .live{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); margin-right:6px; vertical-align:1px}
+    .muted{color:var(--muted)}
+
+    /* drawer */
+    .scrim{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:40}
+    .drawer{position:fixed; top:0; right:0; bottom:0; width:min(440px,100%); z-index:41; background:var(--card); border-left:1px solid var(--line); padding:20px; overflow-y:auto}
+    .drawer h3{margin:0; font-size:20px}
+    .drawer .meta{color:var(--sub); font-size:13px; margin:2px 0 16px}
+    .drawer h4{margin:18px 0 8px; font-size:13px; color:var(--sub); text-transform:uppercase; letter-spacing:.5px}
+    .drawer .close{position:absolute; top:16px; right:16px}
+    .list{display:flex; flex-direction:column; gap:6px; font-size:14px}
+    .list div{display:flex; justify-content:space-between; gap:10px; padding:8px 10px; background:rgba(255,255,255,.03); border-radius:10px}
+    .list div span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
+    .mini{height:70px}
+    .more{display:flex; gap:8px; justify-content:center; margin-top:12px}
+    .more:empty{display:none}
+
+    /* project photos */
+    .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+    .pgrid button{position:relative; aspect-ratio:1; padding:0; border:0; border-radius:10px; overflow:hidden; background:rgba(255,255,255,.05); cursor:pointer}
+    .pgrid img{width:100%; height:100%; object-fit:cover; display:block}
+    .pgrid .st{position:absolute; left:5px; bottom:5px; font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:6px; background:rgba(10,10,18,.75); color:var(--text)}
+    .st.pulled{color:var(--accent)} .st.returned{color:var(--green)} .st.missing{color:var(--pink)}
+    .pmore{width:100%; margin-top:10px}
+    .lb{position:fixed; inset:0; z-index:60; background:rgba(5,5,12,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px}
+    .lb img{max-width:100%; max-height:calc(100vh - 170px); border-radius:12px; object-fit:contain}
+    .lb .cap{max-width:640px; width:100%; margin-top:12px; text-align:center}
+    .lb .cap b{font-size:16px}
+    .lb .cap div{color:var(--sub); font-size:13px}
+    .lb .nav{position:absolute; top:50%; transform:translateY(-50%); font-size:22px; padding:10px 14px}
+    .lb .prev{left:12px} .lb .next{right:12px}
+    .lb .x{position:absolute; top:16px; right:16px}
+
+    .spinner{width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* live */
+    .livegrid{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:16px}
+    .livepill{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(110,231,183,.12);color:var(--green);font-size:12px;font-weight:800;letter-spacing:1px}
+    .livepill i{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+    .livepill.off{background:rgba(255,255,255,.06);color:var(--muted)}.livepill.off i{background:var(--muted);animation:none}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(110,231,183,.6)}70%{box-shadow:0 0 0 8px rgba(110,231,183,0)}100%{box-shadow:0 0 0 0 rgba(110,231,183,0)}}
+    .bignum{font-size:46px;font-weight:800;letter-spacing:-1px;line-height:1;margin:14px 0 4px}
+    .names{color:var(--sub);font-size:13px;min-height:18px}
+    .today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+    .today div{background:rgba(255,255,255,.04);border-radius:12px;padding:10px}.today b{display:block;font-size:20px}.today span{font-size:11.5px;color:var(--muted)}
+    .feed{display:flex;flex-direction:column;gap:6px;max-height:330px;overflow-y:auto;padding-right:4px}
+    .fi{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.025);transition:background 1.5s}
+    .fi.new{background:rgba(167,139,250,.22)}
+    .fi img,.fi .ph{width:40px;height:40px;border-radius:9px;object-fit:cover;flex:none;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center}
+    .fi .tx{flex:1;min-width:0;font-size:14px}.fi .tx div:last-child{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fi .tm{font-size:12px;color:var(--muted);white-space:nowrap}
+    .kdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+    @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} .grid{grid-template-columns:1fr} .livegrid{grid-template-columns:1fr} }
+    /* ── Mission Control look ─────────────────────── */
+    body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background-color:#0A0A12;
+      background-image:radial-gradient(900px 500px at 15% -10%, rgba(124,92,255,.28), transparent 70%), radial-gradient(700px 420px at 100% 10%, rgba(244,114,182,.12), transparent 70%)}
+    .wrap{max-width:1360px; padding:32px 24px 64px}
+    .card{border-radius:24px; background:#101021; padding:24px}
+    .card h2{font-family:"Space Grotesk",sans-serif; font-size:18px}
+    .drawer{background:#14142B} .drawer h3{font-family:"Space Grotesk",sans-serif; font-size:24px}
+    header img{width:48px; height:48px; border-radius:14px; box-shadow:0 10px 30px rgba(124,92,255,.45)}
+    header .t b{font:700 24px "Space Grotesk",sans-serif; letter-spacing:-.5px}
+    header .t b em{font-style:normal; color:var(--accent)}
+    .seg{border-radius:14px; background:rgba(255,255,255,.05)}
+    .seg button{min-height:40px; padding:9px 16px; border-radius:10px}
+    .seg button.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff}
+    header .ghost{min-height:40px}
+    @keyframes mc-ping{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+    @keyframes mc-draw{from{stroke-dashoffset:3000}to{stroke-dashoffset:0}}
+    @keyframes mc-scan{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+    @keyframes mc-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+    .mc-hero{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:16px}
+    .mc-live{position:relative; overflow:hidden; border-radius:24px; padding:24px; background:linear-gradient(160deg,rgba(110,231,183,.10),rgba(20,20,43,.9)); border:1px solid rgba(110,231,183,.25); display:flex; gap:22px; align-items:center; animation:mc-in .6s ease-out both}
+    .radar{position:relative; width:120px; height:120px; flex:none}
+    .radar i{position:absolute; inset:0; border-radius:50%; border:2px solid var(--green); animation:mc-ping 2.6s cubic-bezier(.2,.6,.3,1) infinite}
+    .radar i:nth-child(2){animation-delay:.85s} .radar i:nth-child(3){animation-delay:1.7s}
+    .radar .core{position:absolute; inset:30px; border-radius:50%; background:radial-gradient(circle,#6EE7B7,#34D399); box-shadow:0 0 40px rgba(110,231,183,.6); display:flex; align-items:center; justify-content:center; font:700 28px "Space Grotesk",sans-serif; color:#062B1E}
+    .mc-lt{font:700 20px "Space Grotesk",sans-serif; margin:8px 0 2px}
+    .mc-live .today{margin-top:10px}
+    .mc-big{border-radius:24px; padding:24px; background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015)); border:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; animation:mc-in .6s ease-out .08s both}
+    .mc-big .k,.mc-sm .k{font-size:13px; font-weight:600; color:rgba(237,237,240,.65); display:flex; align-items:center; gap:8px}
+    .mc-big .v{font:700 76px/1 "Space Grotesk",sans-serif; letter-spacing:-3px; -webkit-background-clip:text; background-clip:text; color:transparent; font-variant-numeric:tabular-nums}
+    .grad1{background-image:linear-gradient(135deg,#EDEDF0,#A78BFA)} .grad2{background-image:linear-gradient(135deg,#EDEDF0,#F472B6)}
+    .mc-big .s,.mc-sm .s{font-size:13px; color:rgba(237,237,240,.6)}
+    .mc-small{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px}
+    .mc-sm{border-radius:18px; padding:16px 18px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.07); display:flex; flex-direction:column; gap:2px; animation:mc-in .6s ease-out .15s both}
+    .mc-sm .v{font:700 34px "Space Grotesk",sans-serif; font-variant-numeric:tabular-nums}
+    .mc-sm .dot{width:8px; height:8px; border-radius:3px}
+    .mc-sm .ringrow{display:flex; align-items:center; gap:12px}
+    .mc-sm circle.p{transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)}
+    .mc-chart{position:relative; overflow:hidden; margin-bottom:16px}
+    .mc-chart .scan{position:absolute; top:0; bottom:0; left:0; width:40%; background:linear-gradient(90deg,transparent,rgba(167,139,250,.10),transparent); animation:mc-scan 4s linear infinite; pointer-events:none}
+    .mc-chart .head{position:relative; display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px}
+    .mc-chart .lg{display:flex; gap:16px; font-size:13px; color:rgba(237,237,240,.7)}
+    .mc-chart .lg i{display:inline-block; vertical-align:middle; margin-right:6px}
+    .mcchart{position:relative; height:260px; margin-top:12px}
+    .mcchart svg{width:100%; height:100%; display:block}
+    .mc-line{stroke-dasharray:3000; animation:mc-draw 1.8s ease-out both}
+    .mc-row{display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:16px; margin-bottom:16px}
+    .mc-col{display:flex; flex-direction:column; gap:16px}
+    .mc-row .feed{max-height:420px}
+    .fi{animation:mc-in .5s ease-out both}
+    @media (max-width:1100px){ .mc-hero{grid-template-columns:1fr 1fr} .mc-live{grid-column:1 / -1} .mc-small{grid-template-columns:repeat(2,minmax(0,1fr))} .mc-row{grid-template-columns:1fr} }
+    @media (max-width:600px){ .mc-hero{grid-template-columns:1fr} .mc-big .v{font-size:60px} .mcchart{height:200px} .mc-live{flex-direction:column; align-items:flex-start} }
+    @media (max-width:520px){ .tiles{grid-template-columns:repeat(2,1fr)} .tile .v{font-size:24px} .chart{height:150px} .card{padding:14px} header .seg{order:3; width:100%} header .seg button{flex:1} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login hidden">
+  <form class="box" id="loginForm" autocomplete="on">
+    <img src="og-icon.png" alt="">
+    <h1>PropsTrack Stats</h1>
+    <p>Sign in with your PropsTrack account</p>
+    <input class="field" id="email" type="email" placeholder="Email" autocomplete="username" required>
+    <input class="field" id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button class="btn full" id="loginBtn" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="wrap hidden">
+  <header>
+    <img src="og-icon.png" alt="">
+    <div class="t"><b>PropsTrack <em>Mission Control</em></b><span id="updated">Loading…</span></div>
+    <div class="seg" id="period">
+      <button data-d="7">7 days</button><button data-d="30" class="on">30 days</button><button data-d="90">90 days</button>
+    </div>
+    <button class="btn ghost" id="refresh" title="Refresh">↻</button>
+    <button class="btn ghost" id="logout">Sign out</button>
+  </header>
+
+  <div class="mc-hero">
+    <div class="mc-live">
+      <div class="radar" aria-hidden="true"><i></i><i></i><i></i><div class="core" id="activeNow">–</div></div>
+      <div>
+        <span class="livepill" id="livePill"><i></i>LIVE</span>
+        <div class="mc-lt">in the app right now</div>
+        <div class="names" id="activeNames"></div>
+        <div class="today" id="todayBox"></div>
+      </div>
+    </div>
+    <div class="mc-big"><div class="k">Active users</div><div class="v grad1" id="bActive">–</div><div class="s" id="bActiveSub"></div></div>
+    <div class="mc-big"><div class="k">Photos taken</div><div class="v grad2" id="bPhotos">–</div><div class="s" id="bPhotosSub"></div></div>
+  </div>
+
+  <div class="mc-small">
+    <div class="mc-sm"><div class="k"><span class="dot" style="background:#FBBF24"></span>New users</div><div class="v" id="bNew">–</div><div class="s" id="bNewSub"></div></div>
+    <div class="mc-sm"><div class="k"><span class="dot" style="background:#6EE7B7"></span>Returned</div><div class="v" id="bReturned">–</div><div class="s">props back on the shelf</div></div>
+    <div class="mc-sm"><div class="k"><span class="dot" style="background:#38BDF8"></span>AI named</div>
+      <div class="ringrow">
+        <div class="v" id="bAi">–</div>
+        <svg width="44" height="44" viewBox="0 0 120 120" role="img" aria-label="Share of photos named by AI">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="16"></circle>
+          <circle class="p" id="bRing" cx="60" cy="60" r="50" fill="none" stroke="#38BDF8" stroke-width="16" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(-90 60 60)"></circle>
+        </svg>
+      </div>
+      <div class="s"><span id="bAiPct">–</span> of photos</div></div>
+    <div class="mc-sm"><div class="k"><span class="dot" style="background:#A78BFA"></span>Active projects</div><div class="v" id="bProj">–</div><div class="s" id="bProjSub"></div></div>
+  </div>
+
+  <section class="card mc-chart">
+    <div class="scan"></div>
+    <div class="head"><h2 style="margin:0">Photos &amp; sign-ups per day</h2>
+      <div class="lg"><span><i style="width:14px;height:3px;background:#A78BFA"></i>Photos</span><span><i style="width:10px;height:10px;border-radius:2px;background:#F472B6"></i>New users</span></div></div>
+    <div class="mcchart" id="dailyChart"></div>
+    <div class="axis" id="dailyAxis" style="position:relative"></div>
+  </section>
+
+  <div class="mc-row">
+    <div class="card">
+      <h2>Right now</h2>
+      <div class="hint">Latest pulls, returns and sign-ups across all projects · press ↻ to refresh</div>
+      <div class="feed" id="feed"></div>
+    </div>
+    <div class="mc-col">
+      <div class="card"><h2>Platforms</h2><div class="hint">By each user's latest sign-in</div><div class="stack" id="pfStack"></div><div class="legend" id="pfLegend"></div></div>
+      <div class="card"><h2>When people work</h2><div class="hint">Photos by hour of day (Sofia time)</div>
+        <div class="chart mini" id="hourChart" style="height:120px"></div>
+        <div class="axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div class="card">
+      <h2>Features used</h2>
+      <div class="hint">What people tap in the app</div>
+      <div id="features"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Users</h2>
+    <div class="hint">Tap a person to see what they do</div>
+    <div class="tools">
+      <input class="field" id="userSearch" placeholder="Search name…">
+      <span class="muted" id="userCount"></span>
+    </div>
+    <div class="tbl"><table id="usersTbl"></table></div>
+    <div class="more" id="userMore"></div>
+  </div>
+
+  <div class="card">
+    <h2>Projects</h2>
+    <div class="hint">Most recently active first · tap a project for warehouses, members and photos</div>
+    <div class="tools">
+      <input class="field" id="projSearch" placeholder="Search project…">
+      <span class="muted" id="projCount"></span>
+    </div>
+    <div class="tbl"><table id="projTbl"></table></div>
+    <div class="more" id="projMore"></div>
+  </div>
+</div>
+
+<div id="scrim" class="scrim hidden"></div>
+<aside id="drawer" class="drawer hidden" aria-label="User details"></aside>
+<div id="tip" class="tip hidden"></div>
+
+<script>
+const SUPABASE_URL = 'https://hxtawtebartukulvavvj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6RWpVGy6w4aAhGs4TQMjGw_36NCPFDm'; // public (publishable) key — the data itself is protected in the database
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n || 0).toLocaleString('en-US');
+const PF_COLOR = { iOS:'var(--s-ios)', Android:'var(--s-android)' };
+const FEATURE_LABEL = {
+  app_open:'Opened the app', photo_capture:'Took photo (camera)', photo_gallery:'Added from gallery', prop_return:'Return',
+  prop_pull_again:'Pull again', prop_found:'Marked found', search:'Search', pull_note_add:'Pull list item', pull_note_done:'Pull list done',
+  warehouse_open:'Opened warehouse', warehouse_add:'Added warehouse', project_create:'Created project', project_join:'Joined project',
+  invite_share:'Shared invite', all_props_open:'Opened All Props', actor_add:'Added actor', decor_add:'Added set', prop_edit:'Edited prop',
+  share_app:'Shared app', rate_app:'Rate app', ai_toggle:'Changed AI setting',
+  'tab:home':'Tab · Home', 'tab:activity':'Tab · Activity', 'tab:archive':'Tab · Archive', 'tab:profile':'Tab · Profile',
+  theme:'Changed theme (light/dark)', create_project:'Created project', join_project:'Joined project', onboarding_done:'Finished intro slides',
+  return:'Returned prop', pull_again:'Pulled again', undo_return:'Undid return', found:'Marked found', mark_missing:'Marked missing',
+  delete_prop:'Deleted prop', save_props:'Saved photos', rename_prop:'Renamed prop', rate_prompt:'Rating prompt'
+};
+let days = 30, data = null, sortKey = 'last_seen', sortDir = -1;
+try { const d = +localStorage.getItem('pt_stats_days'); if ([7,30,90].includes(d)) days = d; } catch(e) {}
+
+function ago(ts){
+  if (!ts) return '—';
+  const s = (Date.now() - new Date(ts)) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + ' min ago';
+  if (s < 86400) return Math.floor(s/3600) + ' h ago';
+  if (s < 86400*30) return Math.floor(s/86400) + ' d ago';
+  return new Date(ts).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+const dayLabel = d => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+
+// tooltip
+const tip = $('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.classList.remove('hidden');
+  const r = tip.getBoundingClientRect(); let x = e.clientX + 12, y = e.clientY - r.height - 10;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 12; if (y < 8) y = e.clientY + 16;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+const hideTip = () => tip.classList.add('hidden');
+
+function barChart(el, rows, valueKey, tipFn, opts = {}){
+  const max = Math.max(1, ...rows.map(r => r[valueKey] || 0));
+  const step = max <= 5 ? 1 : max <= 20 ? 5 : max <= 50 ? 10 : Math.pow(10, Math.floor(Math.log10(max)));
+  const top = Math.ceil(max / step) * step;
+  let html = '';
+  if (!opts.noGrid) for (let g = step; g <= top; g += step) {
+    if (top / step > 4 && (g / step) % 2) continue;
+    html += `<div class="gridline" style="bottom:${g/top*100}%"><span>${g}</span></div>`;
+  }
+  html += rows.map((r, i) => { const v = r[valueKey] || 0;
+    return `<div class="col${v ? '' : ' zero'}" data-i="${i}"><div class="b" style="height:${v/top*100}%"></div></div>`; }).join('');
+  el.innerHTML = html;
+  el.querySelectorAll('.col').forEach(c => {
+    c.addEventListener('mousemove', e => showTip(e, tipFn(rows[+c.dataset.i])));
+    c.addEventListener('mouseleave', hideTip);
+    c.addEventListener('touchstart', e => { showTip(e.touches[0], tipFn(rows[+c.dataset.i])); setTimeout(hideTip, 1800); }, {passive:true});
+  });
+}
+
+function hbars(rows, labelFn, valFn, subFn){
+  const max = Math.max(1, ...rows.map(valFn));
+  return '<div class="hbars">' + rows.map(r => `<div class="hb"><div class="top"><span>${esc(labelFn(r))}</span><span>${subFn(r)}</span></div>
+    <div class="track"><div class="fill" style="width:${valFn(r)/max*100}%"></div></div></div>`).join('') + '</div>';
+}
+
+// Area line for photos + bars for sign-ups; the line draws itself in, hover shows the day
+function missionChart(el, rows){
+  const n = rows.length; if (!n) { el.innerHTML = ''; return; }
+  const W = 1000, H = 260;
+  const maxP = Math.max(1, ...rows.map(r => r.photos || 0)), maxS = Math.max(1, ...rows.map(r => r.signups || 0));
+  const x = i => n === 1 ? W / 2 : i * (W / (n - 1));
+  const y = v => H - 8 - (v / maxP) * (H - 28);
+  const line = rows.map((r, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(r.photos || 0).toFixed(1)).join(' ');
+  const bw = Math.max(2, Math.min(16, W / n * 0.5)), slot = W / n;
+  const bars = rows.map((r, i) => { const h = (r.signups || 0) / maxS * 80;
+    return `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="#F472B6" opacity=".55"></rect>`; }).join('');
+  const hits = rows.map((r, i) => `<rect data-i="${i}" x="${(x(i) - slot / 2).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${H}" fill="transparent"></rect>`).join('');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Photos and new users per day">
+    <defs><linearGradient id="mcA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A78BFA" stop-opacity=".45"></stop><stop offset="1" stop-color="#A78BFA" stop-opacity="0"></stop></linearGradient></defs>
+    ${bars}<path d="${line} L${W} ${H} L0 ${H} Z" fill="url(#mcA)"></path>
+    <path class="mc-line" d="${line}" fill="none" stroke="#A78BFA" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>${hits}</svg>`;
+  el.querySelectorAll('rect[data-i]').forEach(r => { const d = rows[+r.dataset.i];
+    r.onmousemove = e => showTip(e, `<b>${dayLabel(d.day)}</b>${fmt(d.photos || 0)} photos · ${d.signups || 0} new users`);
+    r.onmouseleave = hideTip; });
+}
+function countTo(id, to, prefix = ''){
+  const el = $(id); if (!el) return;
+  const from = Number(el.dataset.v) || 0; to = Number(to) || 0; el.dataset.v = to;
+  const t0 = performance.now();
+  const step = now => { const k = Math.min(1, (now - t0) / 1000), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = prefix + fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function render(){
+  const t = data.totals;
+  $('updated').textContent = 'Updated ' + new Date(data.generated_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · last ' + days + ' days';
+  // Every number follows the 7 / 30 / 90 days switch; numbers count up when they change
+  const aiPct = t.p_photos ? (t.p_ai_named || 0) / t.p_photos : 0;
+  countTo('bActive', t.p_active);
+  $('bActiveSub').textContent = `people opened the app in the last ${days} days · ${fmt(t.users)} accounts in total`;
+  countTo('bPhotos', t.p_photos); $('bPhotosSub').textContent = `${fmt(t.props)} all time`;
+  countTo('bNew', t.p_new_users, '+'); $('bNewSub').textContent = `last ${days} days`;
+  countTo('bReturned', t.p_returned);
+  countTo('bAi', t.p_ai_named);
+  $('bAiPct').textContent = Math.round(aiPct * 100) + '%';
+  $('bRing').setAttribute('stroke-dashoffset', (314.16 * (1 - aiPct)).toFixed(1));
+  countTo('bProj', t.p_projects_active); $('bProjSub').textContent = `of ${fmt(t.projects)} projects`;
+
+  const daily = data.daily || [];
+  missionChart($('dailyChart'), daily);
+  const n = daily.length;
+  $('dailyAxis').innerHTML = n ? [0, Math.floor(n/2), n-1].map(i => `<span>${dayLabel(daily[i].day)}</span>`).join('') : '';
+
+  const pf = (data.platforms || []).filter(p => p.platform !== 'Other');
+  const other = (data.platforms || []).find(p => p.platform === 'Other');
+  const tot = pf.reduce((a, p) => a + p.users, 0) || 1;
+  $('pfStack').innerHTML = pf.map(p => `<div style="width:${p.users/tot*100}%;background:${PF_COLOR[p.platform] || 'var(--s-other)'}" title="${p.platform}"></div>`).join('');
+  $('pfLegend').innerHTML = pf.map(p => `<div class="row"><span class="dot" style="background:${PF_COLOR[p.platform] || 'var(--s-other)'}"></span>
+      <div><div>${p.platform}</div><div class="sub">${p.active_30d} active this month</div></div><span class="n">${Math.round(p.users/tot*100)}% · ${p.users}</span></div>`).join('')
+    + (other ? `<div class="sub muted" style="font-size:12px">+${other.users} signed in from web/other</div>` : '');
+
+  const f = data.features || [];
+  $('features').innerHTML = f.length
+    ? hbars(f.slice(0, 12), r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => `${fmt(r.count)} · ${r.users} ${r.users === 1 ? 'person' : 'people'}`)
+    : '<div class="empty">Feature tracking starts with the next app version. Until then you see sign-ins and photos.</div>';
+
+  barChart($('hourChart'), data.hours || [], 'photos', r => `<b>${String(r.hour).padStart(2,'0')}:00–${String(r.hour).padStart(2,'0')}:59</b>${fmt(r.photos)} photos`, {noGrid:true});
+
+  renderUsers(); renderProjects();
+}
+
+const USER_COLS = [
+  ['name', 'Name'], ['platform', 'Platform'], ['last_seen', 'Last seen'], ['photos_period', 'Photos', true],
+  ['photos', 'All photos', true], ['projects', 'Projects', true], ['top_feature', 'Top feature'],
+];
+function renderUsers(){
+  const q = $('userSearch').value.trim().toLowerCase();
+  let rows = (data.users || []).filter(u => !q || (u.name || '').toLowerCase().includes(q));
+  rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey];
+    if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+    return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  const total = rows.length; rows = rows.slice(0, uShow);
+  $('userCount').textContent = q ? `${total} found` : `${fmt((data.users || []).length)} people`;
+  const head = '<thead><tr>' + USER_COLS.map(([k, l, num]) => `<th data-k="${k}" class="${num ? 'num' : ''}">${l}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '</tr></thead>';
+  const body = '<tbody>' + rows.map(u => {
+    const live = u.last_seen && (Date.now() - new Date(u.last_seen)) < 86400000;
+    return `<tr data-id="${u.id}">
+      <td>${live ? '<span class="live"></span>' : ''}${esc(u.name)}</td>
+      <td><span class="pf">${u.platform in PF_COLOR ? `<span class="dot" style="background:${PF_COLOR[u.platform]}"></span>` : ''}${esc(u.platform)}</span></td>
+      <td class="muted">${ago(u.last_seen)}</td>
+      <td class="num">${fmt(u.photos_period)}</td><td class="num muted">${fmt(u.photos)}</td><td class="num">${u.projects}</td>
+      <td class="muted">${esc(FEATURE_LABEL[u.top_feature] || u.top_feature || '—')}</td></tr>`; }).join('') + '</tbody>';
+  $('usersTbl').innerHTML = head + body;
+  $('usersTbl').querySelectorAll('th').forEach(th => th.onclick = () => {
+    const k = th.dataset.k; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'name' || k === 'platform') ? 1 : -1; } renderUsers(); });
+  $('usersTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openUser(tr.dataset.id));
+  moreButtons('userMore', rows.length, total, n => { uShow = n; renderUsers(); });
+}
+
+// Long lists show PAGE rows at a time, with "Show more" / "Show all"
+const PAGE = 15;
+let uShow = PAGE, pShow = PAGE;
+function moreButtons(id, shown, total, set){
+  const el = $(id);
+  if (shown >= total) { el.innerHTML = total > PAGE ? '<button class="btn ghost" data-a="less">Show less</button>' : ''; }
+  else el.innerHTML = `<button class="btn ghost" data-a="more">Show ${Math.min(25, total - shown)} more</button><button class="btn ghost" data-a="all">Show all ${fmt(total)}</button>`;
+  el.querySelectorAll('button').forEach(b => b.onclick = () => set(b.dataset.a === 'more' ? shown + 25 : b.dataset.a === 'all' ? total : PAGE));
+}
+
+function renderProjects(){
+  const q = $('projSearch').value.trim().toLowerCase();
+  const all = (data.projects || []).filter(p => !q || (p.name || '').toLowerCase().includes(q));
+  const rows = all.slice(0, pShow);
+  $('projCount').textContent = q ? `${all.length} found` : `${fmt((data.projects || []).length)} projects`;
+  $('projTbl').innerHTML = '<thead><tr><th>Project</th><th class="num">Members</th><th class="num">Props</th><th class="num">Out now</th><th>Last activity</th></tr></thead><tbody>'
+    + rows.map(p => `<tr data-pid="${esc(p.id)}"><td>${esc(p.name)}</td><td class="num">${p.members}</td><td class="num">${fmt(p.props)}</td><td class="num">${fmt(p.out_now)}</td><td class="muted">${ago(p.last_activity)}</td></tr>`).join('') + '</tbody>';
+  $('projTbl').querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => openProject(tr.dataset.pid));
+  moreButtons('projMore', rows.length, all.length, n => { pShow = n; renderProjects(); });
+}
+
+async function openProject(pid){
+  const p = (data.projects || []).find(x => String(x.id) === String(pid)); if (!p) return;
+  const dr = $('drawer'); $('scrim').classList.remove('hidden'); dr.classList.remove('hidden');
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(p.name)}</h3><div class="meta">Loading…</div><div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>`;
+  $('dClose').onclick = closeUser;
+  const { data: d, error } = await sb.rpc('admin_project', { p_project: pid });
+  if (error) { dr.insertAdjacentHTML('beforeend', `<div class="err">${esc(error.message)}</div>`); return; }
+  const whs = d.warehouses || [], mem = d.members || [];
+  const usedWh = whs.filter(w => w.props > 0).length;
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(d.name || p.name)}</h3>
+    <div class="meta">Created ${d.created_at ? new Date(d.created_at).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '—'} · last activity ${ago(p.last_activity)}</div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+      <div class="tile"><div class="k">People</div><div class="v">${mem.length}</div><div class="s">${mem.filter(m => m.photos > 0).length} have added props</div></div>
+      <div class="tile"><div class="k">Warehouses</div><div class="v">${whs.length}</div><div class="s">${usedWh} in use</div></div>
+      <div class="tile"><div class="k">Props</div><div class="v">${fmt(p.props)}</div><div class="s">${fmt(p.out_now)} out now</div></div>
+    </div>
+    <div class="list" style="margin-bottom:6px"><div><span>Missing</span><span>${d.missing || 0}</span></div><div><span>Actors · Sets</span><span>${d.actors || 0} · ${d.sets || 0}</span></div></div>
+    <h4>Warehouses</h4>
+    ${whs.length ? hbars(whs, w => w.name + (w.pulled ? ` · ${w.pulled} out` : ''), w => w.props, w => `${fmt(w.props)} props · ${w.last_activity ? ago(w.last_activity) : 'never used'}`) : '<div class="empty">No warehouses yet.</div>'}
+    <h4>People in this project</h4>
+    <div class="list">${mem.map(m => `<div><span>${esc(m.name)} <span class="muted">· ${esc(m.role || 'member')}</span></span><span>${fmt(m.photos)} props · ${m.last_activity ? ago(m.last_activity) : 'no activity'}</span></div>`).join('') || '<span class="muted">Nobody yet</span>'}</div>
+    <h4>Photos <span id="pCount" style="text-transform:none"></span></h4>
+    <div class="pgrid" id="pGrid"></div>
+    <div id="pFoot"><div style="display:flex;justify-content:center;padding:20px"><div class="spinner"></div></div></div>`;
+  $('dClose').onclick = closeUser;
+  projPhotos = { pid, list: [], total: 0, token: (projPhotos.token || 0) + 1 };
+  loadProjectPhotos();
+}
+
+// ── Project photos (newest first, 60 at a time; tap to open) ──
+const ST_LABEL = { pulled: 'Out', returned: 'Returned', missing: 'Missing' };
+let projPhotos = { list: [], total: 0, token: 0 };
+async function loadProjectPhotos(){
+  const st = projPhotos, token = st.token;
+  const foot = $('pFoot'); if (!foot) return;
+  foot.innerHTML = '<div style="display:flex;justify-content:center;padding:20px"><div class="spinner"></div></div>';
+  const { data: d, error } = await sb.rpc('admin_project_photos', { p_project: st.pid, p_offset: st.list.length, p_limit: 60 });
+  if (token !== projPhotos.token || !$('pGrid')) return; // another project was opened meanwhile
+  if (error) { foot.innerHTML = `<div class="err">${esc(error.message)}</div>`; return; }
+  const start = st.list.length;
+  st.list.push(...(d.photos || [])); st.total = d.total || 0;
+  $('pCount').textContent = `· ${fmt(st.total)}`;
+  $('pGrid').insertAdjacentHTML('beforeend', (d.photos || []).map((p, i) => {
+    const s = p.is_missing ? 'missing' : p.status;
+    return `<button data-i="${start + i}" title="${esc(p.name || '')}"><img src="${esc(p.thumb_url || p.photo_url)}" alt="" loading="lazy">${ST_LABEL[s] ? `<span class="st ${s}">${ST_LABEL[s]}</span>` : ''}</button>`;
+  }).join(''));
+  $('pGrid').querySelectorAll('button:not([data-b])').forEach(b => { b.dataset.b = 1; b.onclick = () => openPhoto(+b.dataset.i); });
+  foot.innerHTML = !st.total ? '<div class="empty">No photos yet.</div>'
+    : st.list.length < st.total ? `<button class="btn ghost pmore" id="pMore">Show more (${fmt(st.total - st.list.length)} left)</button>` : '';
+  if ($('pMore')) $('pMore').onclick = loadProjectPhotos;
+}
+let lbIndex = -1;
+function openPhoto(i){
+  const p = projPhotos.list[i]; if (!p) return;
+  lbIndex = i;
+  let lb = $('lb');
+  if (!lb) { lb = document.createElement('div'); lb.id = 'lb'; lb.className = 'lb'; document.body.appendChild(lb);
+    lb.onclick = e => { if (e.target === lb) closePhoto(); };
+    // swipe left/right on a phone
+    let sx = null;
+    lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+      if (Math.abs(dx) < 50) return;
+      if (dx < 0 && lbIndex < projPhotos.list.length - 1) openPhoto(lbIndex + 1);
+      else if (dx > 0 && lbIndex > 0) openPhoto(lbIndex - 1);
+    }, { passive: true }); }
+  const s = p.is_missing ? 'missing' : p.status;
+  const when = p.taken_at ? new Date(p.taken_at).toLocaleString('en-GB', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+  lb.innerHTML = `<button class="btn ghost x" id="lbX">✕</button>
+    ${i > 0 ? '<button class="btn ghost nav prev" id="lbPrev">‹</button>' : ''}
+    ${i < projPhotos.list.length - 1 ? '<button class="btn ghost nav next" id="lbNext">›</button>' : ''}
+    <img src="${esc(p.photo_url)}" alt="">
+    <div class="cap"><b>${esc(p.name || '')}</b>
+      <div>${[p.who, p.warehouse, p.decor].filter(Boolean).map(esc).join(' · ')}</div>
+      <div>${esc(when)}${ST_LABEL[s] ? ` · <span class="st ${s}" style="background:none;padding:0">${ST_LABEL[s]}</span>` : ''}${p.returned_at ? ` ${esc(ago(p.returned_at))}` : ''}</div>
+      ${p.note ? `<div>${esc(p.note)}</div>` : ''}
+      <div class="muted">${i + 1} of ${fmt(projPhotos.total)}</div></div>`;
+  $('lbX').onclick = closePhoto;
+  if ($('lbPrev')) $('lbPrev').onclick = () => openPhoto(i - 1);
+  if ($('lbNext')) $('lbNext').onclick = () => openPhoto(i + 1);
+}
+function closePhoto(){ const lb = $('lb'); if (lb) lb.remove(); lbIndex = -1; }
+
+// ── Live feed ─────────────────────────────────────────────
+const KIND = {
+  pulled:   { label: 'Pulled',   color: 'var(--accent)' },
+  returned: { label: 'Returned', color: 'var(--green)' },
+  missing:  { label: 'Marked missing', color: 'var(--pink)' },
+  signup:   { label: 'Signed up', color: '#FBBF24' },
+};
+let seenKeys = null, liveOk = false;
+async function loadLive(){
+  const { data: d, error } = await sb.rpc('admin_live', { p_limit: 40 });
+  const pill = $('livePill');
+  if (error) { liveOk = false; pill.classList.add('off'); pill.lastChild.textContent = 'OFFLINE'; return; }
+  liveOk = true; pill.classList.remove('off'); pill.lastChild.textContent = 'LIVE';
+  $('activeNow').textContent = fmt(d.active_15m);
+  const names = (d.active_names || []).filter(Boolean);
+  $('activeNames').textContent = names.length ? names.slice(0, 6).join(', ') + (names.length > 6 ? ` +${names.length - 6}` : '') : 'Nobody right now';
+  const t = d.today || {};
+  $('todayBox').innerHTML = `<div><b>${fmt(t.photos)}</b><span>photos today</span></div><div><b>${fmt(t.returned)}</b><span>returned today</span></div><div><b>${fmt(t.signups)}</b><span>new today</span></div>`;
+  const feed = d.feed || [];
+  const keyOf = f => f.at + '|' + f.kind + '|' + (f.item || '') + '|' + f.who;
+  const first = seenKeys === null; const prev = seenKeys || new Set();
+  seenKeys = new Set(feed.map(keyOf));
+  $('feed').innerHTML = feed.length ? feed.map(f => {
+    const k = KIND[f.kind] || { label: f.kind.startsWith('event:') ? FEATURE_LABEL[f.kind.slice(6)] || f.kind.slice(6) : f.kind, color: 'var(--sub)' };
+    const where = [f.project, f.warehouse].filter(Boolean).join(' · ');
+    const pic = f.photo_url ? `<img src="${esc(f.photo_url)}" alt="" loading="lazy">` : `<div class="ph" style="color:#FBBF24;font-weight:800">${f.kind === 'signup' ? '+' : '•'}</div>`;
+    return `<div class="fi${!first && !prev.has(keyOf(f)) ? ' new' : ''}">${pic}
+      <div class="tx"><div><span class="kdot" style="background:${k.color}"></span><b>${esc(f.who)}</b> ${k.label.toLowerCase()} ${f.item ? '<b>' + esc(f.item) + '</b>' : ''}</div><div>${esc(where)}</div></div>
+      <div class="tm">${ago(f.at)}</div></div>`;
+  }).join('') : '<div class="empty">Nothing in the last 7 days.</div>';
+  setTimeout(() => document.querySelectorAll('.fi.new').forEach(e => e.classList.remove('new')), 2500);
+}
+// No background polling: data loads when the page opens, when you come back to it, or on ↻.
+let lastLoad = 0;
+function startLive(){ loadLive(); lastLoad = Date.now(); }
+function stopLive(){}
+document.addEventListener('visibilitychange', () => {
+  // Coming back to the tab after a while: one refresh, no timers
+  if (!document.hidden && !$('app').classList.contains('hidden') && Date.now() - lastLoad > 120000) { lastLoad = Date.now(); load(true); loadLive(); }
+});
+
+async function openUser(id){
+  const u = (data.users || []).find(x => x.id === id); if (!u) return;
+  const dr = $('drawer'); $('scrim').classList.remove('hidden'); dr.classList.remove('hidden');
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(u.name)}</h3>
+    <div class="meta">${esc(u.platform)} · last seen ${ago(u.last_seen)} · joined ${new Date(u.signed_up).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</div>
+    <div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>`;
+  $('dClose').onclick = closeUser;
+  const { data: d, error } = await sb.rpc('admin_user', { p_user: id, p_days: days });
+  if (error) { dr.insertAdjacentHTML('beforeend', `<div class="err">${esc(error.message)}</div>`); return; }
+  const byDay = Object.fromEntries((d.photo_days || []).map(r => [r.day, r.photos]));
+  const series = (data.daily || []).map(r => ({ day: r.day, photos: byDay[r.day] || 0 }));
+  dr.innerHTML = `<button class="btn ghost close" id="dClose">✕</button><h3>${esc(u.name)}</h3>
+    <div class="meta">${esc(u.platform)} · last seen ${ago(u.last_seen)} · joined ${new Date(u.signed_up).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+      <div class="tile"><div class="k">Photos</div><div class="v">${fmt(u.photos_period)}</div><div class="s">last ${days} days</div></div>
+      <div class="tile"><div class="k">All photos</div><div class="v">${fmt(u.photos)}</div><div class="s">all time</div></div>
+      <div class="tile"><div class="k">Projects</div><div class="v">${u.projects}</div><div class="s">member of</div></div></div>
+    <h4>Photos per day</h4><div class="chart mini" id="uChart"></div>
+    <h4>Features used</h4>${(d.features || []).length ? hbars(d.features, r => FEATURE_LABEL[r.event] || r.event, r => r.count, r => fmt(r.count)) : '<div class="empty">No feature data yet (starts with the next app version).</div>'}
+    <h4>Projects</h4><div class="list">${(d.projects || []).map(p => `<div><span>${esc(p.name)} <span class="muted">· ${esc(p.role || 'member')}</span></span><span>${fmt(p.photos)} photos</span></div>`).join('') || '<span class="muted">None</span>'}</div>
+    ${(d.recent || []).length ? `<h4>Recent activity</h4><div class="list">${d.recent.slice(0, 25).map(e => `<div><span>${esc(FEATURE_LABEL[e.event] || e.event)}${e.screen ? ` <span class="muted">· ${esc(e.screen)}</span>` : ''}</span><span>${ago(e.created_at)}</span></div>`).join('')}</div>` : ''}`;
+  $('dClose').onclick = closeUser;
+  barChart($('uChart'), series, 'photos', r => `<b>${dayLabel(r.day)}</b>${fmt(r.photos)} photos`, {noGrid:true});
+}
+function closeUser(){ closePhoto(); $('drawer').classList.add('hidden'); $('scrim').classList.add('hidden'); hideTip(); }
+$('scrim').onclick = closeUser;
+document.addEventListener('keydown', e => {
+  if (lbIndex >= 0) {
+    if (e.key === 'Escape') closePhoto();
+    else if (e.key === 'ArrowLeft' && lbIndex > 0) openPhoto(lbIndex - 1);
+    else if (e.key === 'ArrowRight' && lbIndex < projPhotos.list.length - 1) openPhoto(lbIndex + 1);
+    return;
+  }
+  if (e.key === 'Escape') closeUser();
+});
+
+async function load(quiet){
+  if (!quiet) { $('refresh').disabled = true; $('updated').textContent = 'Loading…'; }
+  const { data: d, error } = await sb.rpc('admin_stats', { p_days: days });
+  $('refresh').disabled = false;
+  if (error) {
+    if (/forbidden/i.test(error.message)) { await sb.auth.signOut(); showLogin('This account does not have access to stats.'); }
+    else $('updated').textContent = 'Could not load: ' + error.message;
+    return;
+  }
+  data = d; render();
+}
+
+function showLogin(msg){ $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('loginErr').textContent = msg || ''; }
+function showApp(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); load(); startLive(); }
+
+$('loginForm').onsubmit = async e => {
+  e.preventDefault(); $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  $('loginBtn').disabled = false;
+  if (error) { $('loginErr').textContent = error.message; return; }
+  $('password').value = ''; showApp();
+};
+$('logout').onclick = async () => { stopLive(); await sb.auth.signOut(); showLogin(); };
+$('refresh').onclick = () => { lastLoad = Date.now(); load(); loadLive(); };
+$('userSearch').oninput = () => { uShow = PAGE; renderUsers(); };
+$('projSearch').oninput = () => { pShow = PAGE; renderProjects(); };
+$('period').querySelectorAll('button').forEach(b => {
+  b.classList.toggle('on', +b.dataset.d === days);
+  b.onclick = () => { days = +b.dataset.d; try { localStorage.setItem('pt_stats_days', days); } catch(e) {}
+    $('period').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); load(); };
+});
+
+sb.auth.getSession().then(({ data: { session } }) => session ? showApp() : showLogin());
+</script>
+</body>
+</html>
