@@ -322,13 +322,16 @@ function hbars(rows, labelFn, valFn, subFn){
 function render(){
   const t = data.totals;
   $('updated').textContent = 'Updated ' + new Date(data.generated_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · last ' + days + ' days';
+  // Every tile follows the 7 / 30 / 90 days switch
+  const per = `last ${days} days`;
+  const aiPct = t.p_photos ? Math.round((t.p_ai_named || 0) / t.p_photos * 100) : 0;
   const tiles = [
-    ['Active today', t.active_24h, 'last 24 hours', true],
-    ['Active this week', t.active_7d, 'last 7 days'],
-    ['Active this month', t.active_30d, 'last 30 days'],
-    ['Users', t.users, `+${t.new_users_7d} new this week`],
-    ['Photos this week', t.photos_7d, `${fmt(t.props)} all time`],
-    ['AI named', t.ai_named_7d, 'this week'],
+    ['Active users', t.p_active, per, true],
+    ['New users', t.p_new_users, `${fmt(t.users)} total`],
+    ['Photos', t.p_photos, `${fmt(t.props)} all time`],
+    ['Returned', t.p_returned, per],
+    ['AI named', t.p_ai_named, `${aiPct}% of photos`],
+    ['Active projects', t.p_projects_active, `${fmt(t.projects)} total`],
   ];
   $('tiles').innerHTML = tiles.map(([k, v, s, hero]) => `<div class="tile${hero ? ' hero' : ''}"><div class="k">${k}</div><div class="v">${fmt(v)}</div><div class="s">${s}</div></div>`).join('');
 
@@ -489,7 +492,7 @@ async function loadLive(){
   const names = (d.active_names || []).filter(Boolean);
   $('activeNames').textContent = names.length ? names.slice(0, 6).join(', ') + (names.length > 6 ? ` +${names.length - 6}` : '') : 'Nobody right now';
   const t = d.today || {};
-  $('todayBox').innerHTML = `<div><b>${fmt(t.photos)}</b><span>photos today</span></div><div><b>${fmt(t.returned)}</b><span>returned today</span></div><div><b>${fmt(t.signups)}</b><span>new users</span></div>`;
+  $('todayBox').innerHTML = `<div><b>${fmt(t.photos)}</b><span>photos today</span></div><div><b>${fmt(t.returned)}</b><span>returned today</span></div><div><b>${fmt(t.signups)}</b><span>new today</span></div>`;
   const feed = d.feed || [];
   const keyOf = f => f.at + '|' + f.kind + '|' + (f.item || '') + '|' + f.who;
   const first = seenKeys === null; const prev = seenKeys || new Set();
