@@ -119,6 +119,22 @@
     .list div span:last-child{color:var(--sub); font-variant-numeric:tabular-nums}
     .mini{height:70px}
 
+    /* project photos */
+    .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+    .pgrid button{position:relative; aspect-ratio:1; padding:0; border:0; border-radius:10px; overflow:hidden; background:rgba(255,255,255,.05); cursor:pointer}
+    .pgrid img{width:100%; height:100%; object-fit:cover; display:block}
+    .pgrid .st{position:absolute; left:5px; bottom:5px; font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:6px; background:rgba(10,10,18,.75); color:var(--text)}
+    .st.pulled{color:var(--accent)} .st.returned{color:var(--green)} .st.missing{color:var(--pink)}
+    .pmore{width:100%; margin-top:10px}
+    .lb{position:fixed; inset:0; z-index:60; background:rgba(5,5,12,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px}
+    .lb img{max-width:100%; max-height:calc(100vh - 170px); border-radius:12px; object-fit:contain}
+    .lb .cap{max-width:640px; width:100%; margin-top:12px; text-align:center}
+    .lb .cap b{font-size:16px}
+    .lb .cap div{color:var(--sub); font-size:13px}
+    .lb .nav{position:absolute; top:50%; transform:translateY(-50%); font-size:22px; padding:10px 14px}
+    .lb .prev{left:12px} .lb .next{right:12px}
+    .lb .x{position:absolute; top:16px; right:16px}
+
     .spinner{width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -392,9 +408,69 @@ async function openProject(pid){
     <h4>Warehouses</h4>
     ${whs.length ? hbars(whs, w => w.name + (w.pulled ? ` · ${w.pulled} out` : ''), w => w.props, w => `${fmt(w.props)} props · ${w.last_activity ? ago(w.last_activity) : 'never used'}`) : '<div class="empty">No warehouses yet.</div>'}
     <h4>People in this project</h4>
-    <div class="list">${mem.map(m => `<div><span>${esc(m.name)} <span class="muted">· ${esc(m.role || 'member')}</span></span><span>${fmt(m.photos)} props · ${m.last_activity ? ago(m.last_activity) : 'no activity'}</span></div>`).join('') || '<span class="muted">Nobody yet</span>'}</div>`;
+    <div class="list">${mem.map(m => `<div><span>${esc(m.name)} <span class="muted">· ${esc(m.role || 'member')}</span></span><span>${fmt(m.photos)} props · ${m.last_activity ? ago(m.last_activity) : 'no activity'}</span></div>`).join('') || '<span class="muted">Nobody yet</span>'}</div>
+    <h4>Photos <span id="pCount" style="text-transform:none"></span></h4>
+    <div class="pgrid" id="pGrid"></div>
+    <div id="pFoot"><div style="display:flex;justify-content:center;padding:20px"><div class="spinner"></div></div></div>`;
   $('dClose').onclick = closeUser;
+  projPhotos = { pid, list: [], total: 0, token: (projPhotos.token || 0) + 1 };
+  loadProjectPhotos();
 }
+
+// ── Project photos (newest first, 60 at a time; tap to open) ──
+const ST_LABEL = { pulled: 'Out', returned: 'Returned', missing: 'Missing' };
+let projPhotos = { list: [], total: 0, token: 0 };
+async function loadProjectPhotos(){
+  const st = projPhotos, token = st.token;
+  const foot = $('pFoot'); if (!foot) return;
+  foot.innerHTML = '<div style="display:flex;justify-content:center;padding:20px"><div class="spinner"></div></div>';
+  const { data: d, error } = await sb.rpc('admin_project_photos', { p_project: st.pid, p_offset: st.list.length, p_limit: 60 });
+  if (token !== projPhotos.token || !$('pGrid')) return; // another project was opened meanwhile
+  if (error) { foot.innerHTML = `<div class="err">${esc(error.message)}</div>`; return; }
+  const start = st.list.length;
+  st.list.push(...(d.photos || [])); st.total = d.total || 0;
+  $('pCount').textContent = `· ${fmt(st.total)}`;
+  $('pGrid').insertAdjacentHTML('beforeend', (d.photos || []).map((p, i) => {
+    const s = p.is_missing ? 'missing' : p.status;
+    return `<button data-i="${start + i}" title="${esc(p.name || '')}"><img src="${esc(p.thumb_url || p.photo_url)}" alt="" loading="lazy">${ST_LABEL[s] ? `<span class="st ${s}">${ST_LABEL[s]}</span>` : ''}</button>`;
+  }).join(''));
+  $('pGrid').querySelectorAll('button:not([data-b])').forEach(b => { b.dataset.b = 1; b.onclick = () => openPhoto(+b.dataset.i); });
+  foot.innerHTML = !st.total ? '<div class="empty">No photos yet.</div>'
+    : st.list.length < st.total ? `<button class="btn ghost pmore" id="pMore">Show more (${fmt(st.total - st.list.length)} left)</button>` : '';
+  if ($('pMore')) $('pMore').onclick = loadProjectPhotos;
+}
+let lbIndex = -1;
+function openPhoto(i){
+  const p = projPhotos.list[i]; if (!p) return;
+  lbIndex = i;
+  let lb = $('lb');
+  if (!lb) { lb = document.createElement('div'); lb.id = 'lb'; lb.className = 'lb'; document.body.appendChild(lb);
+    lb.onclick = e => { if (e.target === lb) closePhoto(); };
+    // swipe left/right on a phone
+    let sx = null;
+    lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+      if (Math.abs(dx) < 50) return;
+      if (dx < 0 && lbIndex < projPhotos.list.length - 1) openPhoto(lbIndex + 1);
+      else if (dx > 0 && lbIndex > 0) openPhoto(lbIndex - 1);
+    }, { passive: true }); }
+  const s = p.is_missing ? 'missing' : p.status;
+  const when = p.taken_at ? new Date(p.taken_at).toLocaleString('en-GB', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+  lb.innerHTML = `<button class="btn ghost x" id="lbX">✕</button>
+    ${i > 0 ? '<button class="btn ghost nav prev" id="lbPrev">‹</button>' : ''}
+    ${i < projPhotos.list.length - 1 ? '<button class="btn ghost nav next" id="lbNext">›</button>' : ''}
+    <img src="${esc(p.photo_url)}" alt="">
+    <div class="cap"><b>${esc(p.name || '')}</b>
+      <div>${[p.who, p.warehouse, p.decor].filter(Boolean).map(esc).join(' · ')}</div>
+      <div>${esc(when)}${ST_LABEL[s] ? ` · <span class="st ${s}" style="background:none;padding:0">${ST_LABEL[s]}</span>` : ''}${p.returned_at ? ` ${esc(ago(p.returned_at))}` : ''}</div>
+      ${p.note ? `<div>${esc(p.note)}</div>` : ''}
+      <div class="muted">${i + 1} of ${fmt(projPhotos.total)}</div></div>`;
+  $('lbX').onclick = closePhoto;
+  if ($('lbPrev')) $('lbPrev').onclick = () => openPhoto(i - 1);
+  if ($('lbNext')) $('lbNext').onclick = () => openPhoto(i + 1);
+}
+function closePhoto(){ const lb = $('lb'); if (lb) lb.remove(); lbIndex = -1; }
 
 // ── Live feed ─────────────────────────────────────────────
 const KIND = {
@@ -461,9 +537,17 @@ async function openUser(id){
   $('dClose').onclick = closeUser;
   barChart($('uChart'), series, 'photos', r => `<b>${dayLabel(r.day)}</b>${fmt(r.photos)} photos`, {noGrid:true});
 }
-function closeUser(){ $('drawer').classList.add('hidden'); $('scrim').classList.add('hidden'); hideTip(); }
+function closeUser(){ closePhoto(); $('drawer').classList.add('hidden'); $('scrim').classList.add('hidden'); hideTip(); }
 $('scrim').onclick = closeUser;
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUser(); });
+document.addEventListener('keydown', e => {
+  if (lbIndex >= 0) {
+    if (e.key === 'Escape') closePhoto();
+    else if (e.key === 'ArrowLeft' && lbIndex > 0) openPhoto(lbIndex - 1);
+    else if (e.key === 'ArrowRight' && lbIndex < projPhotos.list.length - 1) openPhoto(lbIndex + 1);
+    return;
+  }
+  if (e.key === 'Escape') closeUser();
+});
 
 async function load(quiet){
   if (!quiet) { $('refresh').disabled = true; $('updated').textContent = 'Loading…'; }
