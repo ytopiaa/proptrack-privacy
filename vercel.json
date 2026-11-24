@@ -13,13 +13,25 @@
   ],
   "headers": [
     {
-      "source": "/(stats|stats-bento|stats-mission)\\.html",
+      "source": "/stats.html",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "no-cache, must-revalidate"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/stats-bento.html",
+      "destination": "/stats.html",
+      "permanent": false
+    },
+    {
+      "source": "/stats-mission.html",
+      "destination": "/stats.html",
+      "permanent": false
     }
   ]
 }
