@@ -13,7 +13,7 @@
   ],
   "headers": [
     {
-      "source": "/stats.html",
+      "source": "/(stats|stats-bento)\\.html",
       "headers": [
         {
           "key": "Cache-Control",
